@@ -1,4 +1,4 @@
-/* Jupyter Lab Specic CSS */
+/* Jupyter Lab Specific CSS */
 
 @import url('./styles.css');
 @import url('./jobtable.css');
@@ -9,4 +9,18 @@
   margin-left: calc(
     var(--jp-cell-collapser-width) + var(--jp-cell-prompt-width)
   );
+}
+
+/* New container styling for DOM-based insertion */
+.spark-monitor-container {
+  display: block;
+  width: 100%;
+  margin-left: calc(
+    var(--jp-cell-collapser-width) + var(--jp-cell-prompt-width)
+  );
+}
+
+/* Ensure proper spacing between input and spark monitor */
+.spark-monitor-container + .jp-Cell-outputWrapper {
+  margin-top: 5px;
 }

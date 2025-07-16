@@ -6,6 +6,7 @@
     "esModuleInterop": true,
     "incremental": true,
     "jsx": "react",
+    "lib": ["esnext", "dom", "dom.iterable", "esnext.asynciterable"],
     "module": "esnext",
     "moduleResolution": "node",
     "noEmitOnError": true,

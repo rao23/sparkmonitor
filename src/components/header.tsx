@@ -32,15 +32,11 @@ export const CellMonitorHeader = observer(() => {
         </span>
         <span className="tbitem badgecontainer">
           <b> Apache Spark </b>
-          <span className="badgeexecutor">
-            <span className="badgeexecutorcount">{notebook.numExecutors}</span>{' '}
-            EXECUTORS
+          <span>
+            <span>{notebook.numExecutors}</span> EXECUTORS
           </span>
-          <span className="badgeexecutorcores">
-            <span className="badgeexecutorcorescount">
-              {notebook.numTotalCores}
-            </span>{' '}
-            CORES
+          <span style={{ marginLeft: '1em' }}> {/* Added for spacing */}
+            <span>{notebook.numTotalCores}</span> CORES
           </span>
           <b> Jobs </b>
           <span className="badges">

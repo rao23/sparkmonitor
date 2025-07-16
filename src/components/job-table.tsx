@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import React from 'react';
-import ReactTimeAgo from 'react-timeago';
+import TimeAgo from 'react-timeago';
 
 import { useCellStore, useNotebookStore } from '../store';
 import { ProgressBar } from './progress-bar';
@@ -25,7 +25,7 @@ const StageItem = observer((props: { stageId: string }) => {
         />
       </td>
       <td className="tdstagestarttime">
-        <ReactTimeAgo date={stage.submissionTime} minPeriod={10} />
+        <TimeAgo date={stage.submissionTime} minPeriod={10} />
       </td>
       <td className="tdstageduration">
         {stage.completionTime
@@ -111,7 +111,7 @@ const JobItem = observer((props: { jobId: string }) => {
           />
         </td>
         <td className="tdjobstarttime">
-          <ReactTimeAgo date={job.startTime} minPeriod={10} />
+          <TimeAgo date={job.startTime} minPeriod={10} />
         </td>
         <td className="tdjobduration">
           {job.endTime

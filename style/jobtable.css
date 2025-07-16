@@ -19,19 +19,29 @@
 }
 
 .pm th {
+  /* background-color: var(--jp-layout-color2); */ /* Original */
+  background-color: #f8f9fa; /* New light gray */
+  border-bottom: 2px solid #dee2e6;
+  font-weight: bold;
+  border: 0;
   white-space: nowrap;
   font-size: small;
-  background-color: var(--jp-layout-color2);
-  border: 0;
 }
 
 .pm td {
-  background-color: var(--jp-layout-color0);
-  border: 0;
+  /* background-color: var(--jp-layout-color0); */ /* Original */
+  background-color: #ffffff;
+  border-top: 1px solid #dee2e6; /* Lighter border */
   font-size: small;
-  border-top: 1px solid rgb(84 84 84 / 8%);
-  padding: 0;
+  border: 0;
+  padding: 8px; /* Add some padding */
 }
+
+.pm .jobstagedatarow > td {
+  background-color: #f8f9fa; /* Background for expanded stage details */
+  padding: 15px;
+}
+
 
 .pm table {
   border-radius: 0;
@@ -172,7 +182,8 @@ progress {
 
 .pm .cssprogress {
   display: block;
-  background: #e7e7e7;
+  background: #e9ecef; /* Lighter background for the progress bar track */
+  border-radius: 4px;
   width: 100%;
   height: 20px;
   padding: 0;
@@ -180,13 +191,13 @@ progress {
   text-align: left;
   position: relative;
   font-size: 75%;
-  border-radius: 2px;
   color: white;
 }
 
 .pm .cssprogress .val1 {
   width: 0%;
-  background: #20b520;
+  /* background: #20b520; */ /* Original */
+  background: #28a745; /* New solid green */
 }
 
 .pm .cssprogress .data {
@@ -198,7 +209,8 @@ progress {
 }
 
 .pm .cssprogress .val2 {
-  background: #42a5f5;
+  /* background: #42a5f5; */ /* Original for running tasks */
+  background: #90ee90; /* Lighter green for running tasks to show progress */
   width: 0%;
 }
 
