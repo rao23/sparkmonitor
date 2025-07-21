@@ -144,10 +144,21 @@ export default class JupyterLabSparkMonitor {
           );
           widget.addClass('spark-monitor-cell-widget');
 
-          (codeCell.layout as PanelLayout).insertWidget(
-            3, // Insert the element below the input area based on position/index
-            widget
-          );
+          // Find the correct insertion index dynamically
+          const layout = codeCell.layout as PanelLayout;
+          let insertIndex = layout.widgets.length; // Default to end
+          
+          // Look for output area and insert before it
+          for (let i = 0; i < layout.widgets.length; i++) {
+            const widgetNode = layout.widgets[i].node;
+            if (widgetNode.classList.contains('jp-Cell-outputWrapper') || 
+                widgetNode.querySelector('.jp-OutputArea')) {
+              insertIndex = i;
+              break;
+            }
+          }
+
+          layout.insertWidget(insertIndex, widget);
           codeCell.update();
         }
       }

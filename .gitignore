@@ -125,3 +125,16 @@ dmypy.json
 
 # Yarn cache
 .yarn/
+labextension/static
+Pipfile
+Pipfile.lock
+Untitled.ipynb
+Untitled1.ipynb
+Untitled2.ipynb
+Untitled3.ipynb
+Untitled4.ipynb
+Untitled5.ipynb
+Untitled6.ipynb
+labextension/package.json
+labextension/build_log.json
+style/Untitled.ipynb
