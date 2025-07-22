@@ -9,6 +9,8 @@ const Plot = createPlotlyComponent(Plotly);
 
 const plotDefaultLayout: Partial<Plotly.Layout> = {
   showlegend: true,
+  paper_bgcolor: '#FAFAFA',  // Same background for entire chart area including legend
+  plot_bgcolor: '#FAFAFA',   // Graph area background color
   margin: {
     t: 50, // top margin
     l: 30, // left margin
@@ -198,15 +200,25 @@ const TaskChart = observer(() => {
 
   return (
     <ErrorBoundary>
-      <div className="tabcontent">
-        <Plot
-          layout={plotLayout}
-          data={data}
-          config={plotOptions}
-          useResizeHandler={true}
-          style={{ width: '100%', height: '100%' }}
-          revision={chartRefreshRevision}
-        />
+      <div className="tabcontent" style={{ 
+        padding: '8px', 
+        backgroundColor: '#F0F4F9',
+        boxSizing: 'border-box'
+      }}>
+        <div style={{ 
+          backgroundColor: '#FAFAFA',
+          borderRadius: '4px',
+          height: '100%'
+        }}>
+          <Plot
+            layout={plotLayout}
+            data={data}
+            config={plotOptions}
+            useResizeHandler={true}
+            style={{ width: '100%', height: '100%' }}
+            revision={chartRefreshRevision}
+          />
+        </div>
       </div>
     </ErrorBoundary>
   );
