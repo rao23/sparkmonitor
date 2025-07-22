@@ -21,24 +21,25 @@
   transform: rotate(90deg);
 }
 
-.pm td.stagetableoffset {
-  background-color: var(--jp-layout-color0);
-}
-
 .pm th {
   /* background-color: var(--jp-layout-color2); */ /* Original */
-  background-color: #f8f9fa; /* New light gray */
-  border-bottom: 2px solid #dee2e6;
+  background-color: #FAFAFA; /* Light gray background */
+  border-top: 1px solid #EEEEEE; /* Light gray border */
+  border-bottom: 2px solid #EEEEEE; /* Slightly thicker bottom border */
   font-weight: 500;
-  border: 0;
   white-space: nowrap;
-  font-size: small;
+  font-size: 13px;
+  font-family: 'Roboto', sans-serif;
+  height: 15px; /* Increased height */
+  line-height: 15px;
+  padding: 8px 12px; /* Increased padding for better spacing */
 }
 
 .pm td {
   background-color: #ffffff;
   border-top: 1px solid #e8eaed; /* Slightly more visible border between rows */
-  font-size: small;
+  font-size: 12px;
+  font-weight: 400;;
   border: 0;
 }
 
@@ -56,16 +57,32 @@
   background-color: #ffffff !important;
   text-align: center;
   vertical-align: middle;
-  height: 25px;
-  line-height: 25px;
+  height: 30px;
+  line-height: 30px;
   border-top: 1px solid #e8eaed; /* Greyish border between rows */
+  padding: 8px 6px; /* Added padding for better spacing */
+  border-bottom: 1px solid #e8eaed;
 }
 
 .pm .jobstagedatarow > td {
-  background-color: #f8f9fa;
-  padding: 15px;
+  background-color: #F0F4F9;
+  padding: 8px;
 }
 
+/* Stage table rows - smaller version of job rows */
+.pm .stagerow > td {
+  background-color: #ffffff !important;
+  text-align: center;
+  vertical-align: middle;
+  height: 28px;
+  line-height: 28px;
+  border-top: 1px solid #e8eaed;
+  border-bottom: 1px solid #e8eaed;
+  padding: 6px 4px;
+  font-size: 12px;
+  font-weight: 400;
+  font-family: 'Roboto', sans-serif;
+}
 
 .pm table {
   border-radius: 0;
@@ -201,7 +218,14 @@ progress {
 }
 
 .pm .stagetable tr th {
-  background: var(--jp-layout-color2);
+  background-color: #DDE3EA;
+  border: none;
+  font-weight: 500;
+  font-size: 13px;
+  font-family: 'Roboto', sans-serif;
+  height: 26px;
+  line-height: 26px;
+  padding: 6px 8px;
 }
 
 .pm .cssprogress-container {
@@ -239,15 +263,17 @@ progress {
 }
 
 .pm .cssprogress .val1 {
-  width: 25%; /* Adjust dynamically based on progress */
+  width: 0%; /* Adjust dynamically based on progress */
   height: 100%;
   background: #6DD58C; /* Green for completed */
+  flex-shrink: 0;
 }
 
 .pm .cssprogress .val2 {
-  width: 10%; /* Adjust dynamically based on progress */
+  width: 0%; /* Adjust dynamically based on progress */
   height: 100%;
   background: #6991D6; /* Blue for running */
+  flex-shrink: 0;
 }
 
 .pm .cssprogress span {

@@ -8,7 +8,7 @@ export class SparkJob {
   cellId!: string;
   jobId!: string;
   status: 'RUNNING' | 'COMPLETED' | 'FAILED' = 'RUNNING';
-  name = 'unnamed';
+  name = 'Unnamed';
   startTime!: Date;
   endTime?: Date;
   stageIds: string[] = [];

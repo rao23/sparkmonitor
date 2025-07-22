@@ -70,7 +70,8 @@ export class NotebookStore {
     job.jobId = data.jobId;
     job.status = data.status;
     job.cellId = cellId;
-    job.name = String(data.name).split(' ')[0];
+    const jobName = String(data.name).split(' ')[0];
+    job.name = jobName.charAt(0).toUpperCase() + jobName.slice(1).toLowerCase();
     job.startTime = new Date(data.submissionTime);
     job.stageIds = data.stageIds;
     job.numStages = data.stageIds.length;

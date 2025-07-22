@@ -6,7 +6,7 @@ export class SparkStage {
   cellId!: string;
   stageId!: string;
   status!:
-    | 'UNKNOWN'
+    | 'Unknown'
     | 'COMPLETED'
     | 'FAILED'
     | 'RUNNING'

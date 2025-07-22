@@ -13,9 +13,13 @@ const StageItem = observer((props: { stageId: string }) => {
   return (
     <tr className="stagerow">
       <td className="tdstageid">{stage.stageId}</td>
-      <td className="tdstagename">{stage.name}</td>
+      <td className="tdstagename">
+        {stage.name ? String(stage.name).charAt(0).toUpperCase() + String(stage.name).slice(1).toLowerCase() : 'Unnamed'}
+      </td>
       <td className="tdstagestatus">
-        <span className={stage.status}>{stage.status}</span>
+        <span className={stage.status}>
+          {stage.status ? String(stage.status).charAt(0).toUpperCase() + String(stage.status).slice(1).toLowerCase() : 'Unknown'}
+        </span>
       </td>
       <td className="tdtasks">
         <ProgressBar
@@ -48,8 +52,8 @@ const StageTable = observer((props: { jobId: string }) => {
     <table className="stagetable">
       <thead>
         <tr>
-          <th className="thstageid">ID</th>
-          <th className="thstagename">Stage</th>
+          <th className="thstageid">Stage ID</th>
+          <th className="thstagename">Stage Name</th>
           <th className="thstagestatus">Status</th>
           <th className="thstagetasks">Tasks</th>
           <th className="thstagestart">Submission Time</th>
@@ -82,16 +86,20 @@ const JobItem = observer((props: { jobId: string }) => {
           ></span>
         </td>
         <td className="tdjobid">{job.jobId}</td>
-        <td className="tdjobname">{job.name}</td>
+        <td className="tdjobname">
+          {job.name ? String(job.name).charAt(0).toUpperCase() + String(job.name).slice(1).toLowerCase() : 'Unnamed'}
+        </td>
         <td className="tdjobstatus">
-          <span className={'tditemjobstatus ' + job.status}>{job.status}</span>
+          <span className={'tditemjobstatus ' + job.status}>
+            {job.status ? String(job.status).charAt(0).toUpperCase() + String(job.status).slice(1).toLowerCase() : 'Unknown'}
+          </span>
         </td>
         <td className="tdjobstages">
           {job.numCompletedStages}/{job.numStages}
-          {job.numSkippedStages > 0 ? `(${job.numSkippedStages} skipped)` : ''}
-          {job.numActiveStages > 0 ? `(${job.numActiveStages} active)` : ''}
+          {/* {job.numSkippedStages > 0 ? `(${job.numSkippedStages} skipped)` : ''}
+          {job.numActiveStages > 0 ? `(${job.numActiveStages} active)` : ''} */}
         </td>
-        <td className="tdtasks">
+        <td className="tdtasks">                 
           <ProgressBar
             total={job.numTasks}
             running={job.numActiveTasks}
@@ -111,8 +119,7 @@ const JobItem = observer((props: { jobId: string }) => {
       </tr>
       {!stagesCollapsed && (
         <tr className="jobstagedatarow">
-          <td className="stagetableoffset"></td>
-          <td colSpan={7} className="stagedata">
+          <td colSpan={8} className="stagedata">
             <StageTable jobId={props.jobId} />
           </td>
         </tr>
