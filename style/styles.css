@@ -1,16 +1,21 @@
 .pm {
   background-color: #f7f7f7;
   margin: 8px 0;
+  font-family: 'Roboto';
 }
 
 /* --------------Title Bar-------------------- */
 .pm .title {
   /* background-color: #f37600; */ /* Original */
-  background-color: #f0f0f0; /* New light gray color */
+  background-color: #E9EEF6; /* New light gray color */
   color: #333; /* Darker text for better contrast */
   display: flex;
   flex-flow: row wrap;
   justify-content: flex-end;
+  padding: 8px;
+  align-items: center;
+  gap: 168px;
+  align-self: stretch;
 }
 
 .pm .titleright {
@@ -34,6 +39,7 @@
 
 .pm .badgecontainer {
   padding: 0 5px;
+  font-weight: 500;
 }
 
 .pm .titlecollapse:hover {
@@ -60,47 +66,55 @@
 
 .pm .badges {
   text-align: center;
+  margin-left: 8px; /* Add gap between "Jobs:" and the badges */
 }
 
 .badgerunning {
-  background-color: #42a5f5;
+  color: #1976d2; /* Blue text for running - similar tone to green */
+  background-color: #EDEFF3;
+  border: 1px solid #1976d2; /* Blue border for running */
 }
 
 .badgecompleted {
-  /* background-color: #20b520; */ /* Original */
-  background-color: #d4edda; /* New light green color */
-  color: #155724; /* Dark green text */
-  border: 1px solid #c3e6cb;
+  color: #188038; /* Green text for completed */
+  background-color: #EDEFF3; /* Same background as executor/core badges */
+  border: 1px solid #188038; /* Green border for completed */
 }
 
 .badgefailed {
-  background-color: #db3636;
+  color: #db3636; /* Red text for failed */
+  background-color: #EDEFF3; /* Same background as executor/core badges */
+  border: 1px solid #db3636; /* Red border for failed */
 }
 
 .badgecompleted,
 .badgefailed,
 .badgerunning {
-  font-size: 80%;
-  padding: 5px 8px;
-  color: white;
-  border-radius: 2px;
-  box-shadow: 0 0 1px 0 rgb(0 0 0 / 36%);
+  font-size: 100%;
+  padding: 0px 8px; /* Similar padding to executor/core badges */
+  border-radius: 100px; /* Same rounded style as executor/core badges */
   white-space: nowrap;
-  font-weight: bold;
+  font-weight: 500; /* Same font weight as executor/core badges */
   margin: 0 2px;
 }
 
 .badgeexecutor,
 .badgeexecutorcores {
-  font-size: 80%;
-  padding: 5px 8px;
-  color: white;
-  border-radius: 2px;
-  box-shadow: 0 0 1px 0 rgb(0 0 0 / 36%);
-  white-space: nowrap;
-  font-weight: bold;
-  margin: 0 2px;
-  background-color: rgb(117 57 0 / 65%);
+  font-size: 100%; /* Same size as Apache Spark text */
+  padding: 0px 8px; /* Bigger padding to make badge larger */
+  justify-content: center;
+  align-items: flex-start;
+  gap: 5px;
+
+  color: #202124;
+  border-radius: 100px;
+  border: 1px solid #C4C7C5;
+  background-color: #EDEFF3;
+  margin-right: 8px; /* Add gap between executor and core badges */
+}
+
+.badgeexecutorcores {
+  margin-left: 4px; /* Add gap between executor and core badges */
 }
 
 .uibuttondisabled {
@@ -122,7 +136,7 @@
 }
 
 .pm .timelinetabbuttonicon {
-  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAQAAABKfvVzAAAALklEQVR4AWMYRuA/YTjYNdA/lLCJka6BvgDF4gY4uwFZhnQN9PcDIZp0DcMGAADGCJlpwLGAQAAAAABJRU5ErkJggg==');
+  background-image: url('./icons/timeline-tab-icon.svg');
 }
 
 .pm .sparkuitabbuttonicon {
@@ -130,11 +144,11 @@
 }
 
 .pm .taskviewtabbuttonicon {
-  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAQAAABKfvVzAAAAQ0lEQVR4Ac3SsQ2AQAzF0LcgOrH/AuSWCHUa0pxQ7Pa7++ZyC/nhthRCNoZC9h4OMCXA9ACDg7+/tNv5o7BEM79M5QVZbBWGPizgRwAAAABJRU5ErkJggg==');
+  background-image: url('./icons/tasks-tab-icon.svg');
 }
 
 .pm .jobtabletabbuttonicon {
-  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAQAAABKfvVzAAAAG0lEQVR4AWMY2eA/BMJYmHAQahj19Kinhz0AAOazv0F7pjjzAAAAAElFTkSuQmCC');
+  background-image: url('./icons/jobs-tab-icon.svg');
 }
 
 .pm .stopbuttonicon {
@@ -157,7 +171,20 @@
 }
 
 .pm .tabbutton:hover {
-  background-color: #c45917;
+  /* Circular background with light shadow - ensure icon stays in place */
+  background-color: rgba(60, 64, 67, 0.04); /* #3C4043 with 4% opacity */
+  border-radius: 50%; /* Makes it circular */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Light shadow */
+  transition: background-color 0.2s ease, box-shadow 0.2s ease; /* Only transition background and shadow */
+  /* Remove width/height changes to prevent icon movement */
+}
+
+.pm .tabbutton:hover.tabbuttonactive {
+  /* Keep active state styling on hover - no circular background */
+  background-color: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  filter: brightness(0) saturate(100%) invert(27%) sepia(96%) saturate(1458%) hue-rotate(213deg) brightness(96%) contrast(91%);
 }
 
 .pm .cancelbutton:hover {
@@ -165,11 +192,14 @@
 }
 
 .pm .tabbuttonactive {
-  /* color: white; */
-  box-shadow: 0 0 1px 0 rgb(0 0 0 / 46%) inset;
-  background-color: rgb(0 0 0 / 20%);
-  font-weight: bold;
-  border: 0;
+  /* Remove shadow/box styling */
+  /* box-shadow: 0 0 1px 0 rgb(0 0 0 / 46%) inset; */
+  /* background-color: rgb(0 0 0 / 20%); */
+  /* font-weight: bold; */
+  /* border: 0; */
+  
+  /* Color the icon blue when active */
+  filter: brightness(0) saturate(100%) invert(27%) sepia(96%) saturate(1458%) hue-rotate(213deg) brightness(96%) contrast(91%);
 }
 
 /* --------------Content-------------------- */

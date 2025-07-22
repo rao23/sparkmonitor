@@ -22,11 +22,11 @@ export const CellMonitor = observer(() => {
   }
 
   let tabContent = <></>;
-  if (!cell.isCollapsed && cell?.view === 'jobs') {
+  if (cell?.view === 'jobs') {
     tabContent = <JobTable />;
-  } else if (!cell.isCollapsed && cell?.view === 'taskchart') {
+  } else if (cell?.view === 'taskchart') {
     tabContent = <LazyTaskChart />;
-  } else if (!cell.isCollapsed && cell?.view === 'timeline') {
+  } else if (cell?.view === 'timeline') {
     tabContent = <LazyTimeline />;
   }
 

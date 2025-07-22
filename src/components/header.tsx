@@ -18,32 +18,26 @@ export const CellMonitorHeader = observer(() => {
   return (
     <div className="title">
       <div className="titleleft">
-        <span
-          className="tbitem titlecollapse "
-          onClick={() => {
-            cell.toggleCollapseCellDisplay();
-          }}
-        >
-          <span
-            className={
-              'headericon ' + (cell.isCollapsed ? 'headericoncollapsed' : '')
-            }
-          ></span>
-        </span>
         <span className="tbitem badgecontainer">
-          <b> Apache Spark </b>
-          <span>
-            <span>{notebook.numExecutors}</span> EXECUTORS
+          Apache Spark:
+          <span style={{ marginLeft: '8px' }}>
+            <span className="badgeexecutor">
+              <span className="badgeexecutorcount">{notebook.numExecutors}</span>{' '}
+              Executors
+            </span>
+            <span className="badgeexecutorcores">
+              <span className="badgeexecutorcorescount">
+                {notebook.numTotalCores}
+              </span>{' '}
+              Cores
+            </span>
           </span>
-          <span style={{ marginLeft: '1em' }}> {/* Added for spacing */}
-            <span>{notebook.numTotalCores}</span> CORES
-          </span>
-          <b> Jobs </b>
+          <span style={{ marginLeft: '16px' }}>Jobs:</span>
           <span className="badges">
             {cell.numActiveJobs ? (
               <span className="badgerunning">
                 <span className="badgerunningcount">{cell.numActiveJobs}</span>{' '}
-                RUNNING
+                Running
               </span>
             ) : (
               ''
@@ -53,7 +47,7 @@ export const CellMonitorHeader = observer(() => {
                 <span className="badgecompletedcount">
                   {cell.numCompletedJobs}
                 </span>{' '}
-                COMPLETED
+                Completed
               </span>
             ) : (
               ''
@@ -61,7 +55,7 @@ export const CellMonitorHeader = observer(() => {
             {cell.numFailedJobs ? (
               <span className="badgefailed">
                 <span className="badgefailedcount">{cell.numFailedJobs}</span>{' '}
-                FAILED
+                Failed
               </span>
             ) : (
               ''
