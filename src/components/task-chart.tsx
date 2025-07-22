@@ -10,13 +10,18 @@ const Plot = createPlotlyComponent(Plotly);
 const plotDefaultLayout: Partial<Plotly.Layout> = {
   showlegend: true,
   margin: {
-    t: 30, // top margin
+    t: 50, // top margin
     l: 30, // left margin
     r: 30, // right margin
     b: 60 // bottom margin
   },
   xaxis: {
-    type: 'date'
+    type: 'date',
+    showticklabels: true,  // Show time tick labels on x-axis
+    tickformat: '%H:%M:%S',  // Show only time (hours:minutes:seconds), not date
+    title: {
+      text: ''  // Remove x-axis title
+    }
     // title: 'Time',
   },
   yaxis: {
@@ -26,14 +31,20 @@ const plotDefaultLayout: Partial<Plotly.Layout> = {
   shapes: [],
   legend: {
     orientation: 'h',
-    x: 0,
-    y: 5,
+    x: 1,
+    xanchor: 'right',
+    y: 1.08,
+    yanchor: 'top',
     // traceorder: 'normal',
     font: {
       family: 'sans-serif',
       size: 12,
       color: '#000'
-    }
+    },
+    itemsizing: 'trace',
+    tracegroupgap: 5,
+    itemclick: 'toggle',
+    itemdoubleclick: 'toggleothers'
     // bgcolor: '#E2E2E2',
     // bordercolor: '#FFFFFF',
     // borderwidth: 2
@@ -49,31 +60,74 @@ const TaskChart = observer(() => {
   const [chartRefreshRevision, setRevision] = React.useState(1);
 
   const data = React.useMemo(() => {
+    // Main chart traces - no legend
     const tasktrace: Plotly.Data = {
       x: taskChartStore.taskDataX,
       y: taskChartStore.taskDataY,
-      fill: 'tozeroy',
       type: 'scatter',
-      mode: 'none',
-      fillcolor: '#00aedb',
-      name: 'Active Tasks'
+      mode: 'lines',
+      line: {
+        color: '#6DD58C',
+        width: 2,
+        shape: 'hv'  // Step chart - horizontal then vertical
+      },
+      fill: 'tozeroy',
+      fillcolor: 'rgba(109, 213, 140, 0.3)',
+      name: 'Active Tasks',
+      legendgroup: 'tasks',
+      showlegend: false
     };
     const executortrace: Plotly.Data = {
       x: taskChartStore.executorDataX,
       y: taskChartStore.executorDataY,
-      fill: 'tozeroy',
       type: 'scatter',
-      mode: 'none',
-      fillcolor: '#F5C936',
-      name: 'Executor Cores'
+      mode: 'lines',
+      line: {
+        color: '#6991D6',
+        width: 2,
+        shape: 'hv'  // Step chart - horizontal then vertical
+      },
+      name: 'Executor Cores',
+      legendgroup: 'executors',
+      showlegend: false
     };
+    
+    // Legend-only traces with circular markers
+    const taskLegend: Plotly.Data = {
+      x: [null],
+      y: [null],
+      type: 'scatter',
+      mode: 'markers',
+      marker: {
+        symbol: 'circle',
+        size: 8,
+        color: '#6DD58C'
+      },
+      name: 'Active Tasks',
+      legendgroup: 'tasks',
+      showlegend: true
+    };
+    const executorLegend: Plotly.Data = {
+      x: [null],
+      y: [null],
+      type: 'scatter',
+      mode: 'markers',
+      marker: {
+        symbol: 'circle',
+        size: 8,
+        color: '#6991D6'
+      },
+      name: 'Executor Cores',
+      legendgroup: 'executors',
+      showlegend: true
+    };
+    
     const jobtrace: Plotly.Data = {
       x: taskChartStore.jobDataX,
       y: taskChartStore.jobDataY,
       text: taskChartStore.jobDataText as any, //this.jobDataText,
       type: 'scatter',
       mode: 'markers',
-      fillcolor: '#F5C936',
       // name: 'Jobs',
       showlegend: false,
       marker: {
@@ -82,7 +136,7 @@ const TaskChart = observer(() => {
         size: 1
       }
     };
-    return [executortrace, tasktrace, jobtrace];
+    return [tasktrace, executortrace, jobtrace, taskLegend, executorLegend];
   }, [
     taskChartStore.taskDataX,
     taskChartStore.taskDataY,
@@ -110,6 +164,23 @@ const TaskChart = observer(() => {
           }
         };
       }),
+      annotations: [
+        {
+          text: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }),
+          x: 0,
+          y: 1.08,
+          xref: 'paper',
+          yref: 'paper',
+          xanchor: 'left',
+          yanchor: 'top',
+          showarrow: false,
+          font: {
+            family: 'Roboto',
+            size: 12,
+            color: '#000'
+          }
+        }
+      ],
       datarevision: chartRefreshRevision
     };
   }, [taskChartStore.jobDataX, chartRefreshRevision]);

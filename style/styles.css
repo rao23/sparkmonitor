@@ -290,3 +290,55 @@
 .pm .taskcontainer {
   user-select: none;
 }
+
+/* Task Chart Legend Spacing */
+.legend .traces .legendtext {
+  transform: translateX(-5px);
+}
+
+.legend .traces .legendtext text {
+  transform: translateX(-3px);
+}
+
+/* Task Chart Legend Hover Effects */
+.legend .traces .legendtoggle:hover,
+.legend .traces:hover .legendtoggle,
+g.legend g.traces:hover {
+  cursor: pointer;
+  opacity: 0.7;  /* More visible opacity change */
+}
+
+.legend .traces .legendtoggle:hover .legendfill,
+.legend .traces .legendtoggle:hover .legendsymbols,
+.legend .traces:hover .legendfill,
+.legend .traces:hover .legendsymbols,
+g.legend g.traces:hover .legendfill,
+g.legend g.traces:hover .legendsymbols {
+  opacity: 0.7;  /* More visible opacity change */
+  transform: scale(1.1);  /* Slight scale effect */
+  transition: all 0.2s ease;  /* Smooth transition */
+}
+
+.legend .traces .legendtoggle:hover .legendtext,
+.legend .traces:hover .legendtext,
+g.legend g.traces:hover .legendtext {
+  fill: #000 !important;  /* Darker text for better visibility */
+  font-weight: 600 !important;  /* Bolder text */
+  transition: all 0.2s ease;  /* Smooth transition */
+}
+
+.legend .traces .legendtoggle:hover .legendtext text,
+.legend .traces:hover .legendtext text,
+g.legend g.traces:hover .legendtext text {
+  fill: #000 !important;  /* Darker text for better visibility */
+  font-weight: 600 !important;  /* Bolder text */
+  transition: all 0.2s ease;  /* Smooth transition */
+}
+
+/* Task Chart Date Annotation Styling */
+.js-plotly-plot .annotation-text {
+  font-family: 'Roboto' !important;
+  font-weight: normal !important;
+  font-size: 12px !important;
+  fill: #000 !important;
+}
