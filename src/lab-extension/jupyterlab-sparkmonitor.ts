@@ -58,7 +58,9 @@ export default class JupyterLabSparkMonitor {
         const codeCell = this.notebookPanel.content.widgets.find(
           widget => widget.model === cellModel
         );
-        if (codeCell && !codeCell.node.querySelector('.sparkMonitorCellRoot')) {
+        if (codeCell && !codeCell.node.querySelector('.sparkMonitorCellRoot') && 
+            !codeCell.node.querySelector('.spark-monitor-cell-widget')) {
+          console.log('SparkMonitor: Creating widget for cell', cellModel.id);
           const widget = ReactWidget.create(
             React.createElement(CellWidget, {
               notebookId: this.notebookPanel.id,
@@ -67,22 +69,61 @@ export default class JupyterLabSparkMonitor {
           );
           widget.addClass('spark-monitor-cell-widget');
 
-          // Find the correct insertion index dynamically
           const layout = codeCell.layout as PanelLayout;
-          let insertIndex = layout.widgets.length; // Default to end
           
-          // Look for output area and insert before it
-          for (let i = 0; i < layout.widgets.length; i++) {
-            const widgetNode = layout.widgets[i].node;
-            if (widgetNode.classList.contains('jp-Cell-outputWrapper') || 
-                widgetNode.querySelector('.jp-OutputArea')) {
-              insertIndex = i;
-              break;
+          // Function to position the widget correctly
+          const positionWidget = () => {
+            // Look for output area and insert after it
+            let insertIndex = layout.widgets.length; // Default to end
+            for (let i = 0; i < layout.widgets.length; i++) {
+              const widgetNode = layout.widgets[i].node;
+              if (widgetNode.classList.contains('jp-Cell-outputWrapper') || 
+                  widgetNode.querySelector('.jp-OutputArea')) {
+                insertIndex = i + 1; // Insert AFTER the output area
+                return insertIndex;
+              }
             }
-          }
+            return insertIndex;
+          };
 
-          layout.insertWidget(insertIndex, widget);
-          codeCell.update();
+          const insertIndex = positionWidget();
+          
+          // If no output area found, it might be a new cell - use MutationObserver
+          if (insertIndex === layout.widgets.length && !codeCell.node.querySelector('.jp-Cell-outputWrapper, .jp-OutputArea')) {
+            // Temporarily insert at the end
+            layout.insertWidget(insertIndex, widget);
+            codeCell.update();
+            
+            // Watch for output area creation and reposition
+            const observer = new MutationObserver((mutations) => {
+              for (const mutation of mutations) {
+                if (mutation.type === 'childList') {
+                  for (const node of Array.from(mutation.addedNodes)) {
+                    if (node instanceof Element && 
+                        (node.classList.contains('jp-Cell-outputWrapper') || 
+                         node.querySelector('.jp-OutputArea'))) {
+                      // Output area found, reposition the widget
+                      const newIndex = positionWidget();
+                      if (newIndex !== layout.widgets.indexOf(widget)) {
+                        layout.removeWidget(widget);
+                        layout.insertWidget(newIndex, widget);
+                        codeCell.update();
+                      }
+                      observer.disconnect();
+                      return;
+                    }
+                  }
+                }
+              }
+            });
+            
+            observer.observe(codeCell.node, { childList: true, subtree: true });
+            setTimeout(() => observer.disconnect(), 10000);
+          } else {
+            // Output area exists, insert normally
+            layout.insertWidget(insertIndex, widget);
+            codeCell.update();
+          }
         }
       }
     };
@@ -91,9 +132,13 @@ export default class JupyterLabSparkMonitor {
 
     // Ensure new cells created have a monitoring display
     cells.changed.connect((cells, changed) => {
-      for (let i = 0; i < cells.length; i += 1) {
-        createElementIfNotExists(cells.get(i));
+      if (changed.type === 'add') {
+        // Only handle newly added cells
+        changed.newValues.forEach(cellModel => {
+          createElementIfNotExists(cellModel);
+        });
       }
+      // Don't handle other change types to avoid duplicates
     });
 
     // Do it the first time
