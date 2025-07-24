@@ -123,8 +123,11 @@ dmypy.json
 # OSX files
 .DS_Store
 
-# Yarn cache
-.yarn/
+# Yarn - ignore cache but keep releases
+.yarn/*
+!.yarn/releases/
+
+# TEMPORARY FILES
 labextension/static
 Pipfile
 Pipfile.lock
