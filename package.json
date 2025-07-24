@@ -31,7 +31,7 @@
     "homepage": "https://github.com/swan-cern/sparkmonitor",
     "scripts": {
         "build": "jlpm run build:lib && jlpm run build:labextension:dev",
-        "build:prod": "jlpm clean && jlpm run build:lib:prod && jlpm run build:labextension && jlpm run build:nbextension && jlpm run build:scalalistener",
+        "build:prod": "jlpm clean && jlpm run build:lib:prod && jlpm run build:labextension && jlpm run build:nbextension",
         "build:labextension": "jupyter labextension build .",
         "build:labextension:dev": "jupyter labextension build --development True .",
         "build:lib": "tsc -p tsconfig.lab.json --sourceMap",

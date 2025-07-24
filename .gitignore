@@ -13,7 +13,7 @@ sparkmonitor/nbextension
 scalalistener/project/project
 scalalistener/project/target
 scalalistener/target/
-sparkmonitor/*.jar
+# sparkmonitor/*.jar
 # Version file is handled by hatchling
 sparkmonitor/_version.py
 
