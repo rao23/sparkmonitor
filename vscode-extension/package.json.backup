@@ -1,0 +1,68 @@
+{
+  "name": "sparkmonitor-vscode",
+  "displayName": "SparkMonitor VS Code",
+  "description": "Spark job monitoring and visualization for VS Code Jupyter notebooks",
+  "version": "0.0.1",
+  "publisher": "sparkmonitor",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Data Science",
+    "Visualization",
+    "Notebooks"
+  ],
+  "keywords": [
+    "spark",
+    "jupyter",
+    "notebook",
+    "monitoring",
+    "pyspark"
+  ],
+  "main": "./dist/extension.js",
+  "scripts": {
+    "build:renderer": "webpack --config webpack.config.js",
+    "build:extension": "tsc -p tsconfig.json",
+    "build": "npm run build:renderer && npm run build:extension",
+    "watch": "npm run build:renderer -- --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "@types/vscode": "^1.102.0",
+    "@vscode/vsce": "^3.6.0",
+    "css-loader": "^6.0.0",
+    "style-loader": "^3.0.0",
+    "ts-loader": "^9.0.0",
+    "typescript": "^4.9.0",
+    "webpack": "^5.0.0",
+    "webpack-cli": "^4.0.0"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "sparkmonitor.toggle",
+        "title": "Toggle SparkMonitor Display",
+        "category": "SparkMonitor"
+      }
+    ],
+    "notebookOutputRenderer": [
+      {
+        "id": "sparkmonitor-renderer",
+        "displayName": "SparkMonitor Renderer",
+        "mimeTypes": [
+          "application/vnd.sparkmonitor+json"
+        ],
+        "entrypoint": "./dist/renderer.js"
+      }
+    ]
+  },
+  "activationEvents": [
+    "onNotebook:jupyter-notebook"
+  ]
+}

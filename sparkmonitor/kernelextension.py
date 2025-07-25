@@ -220,6 +220,16 @@ def configure(conf):
 def sendToFrontEnd(msg):
     """Send a message to the frontend through the singleton monitor object."""
     global monitor
+    
+    # Check if we're in VS Code and handle accordingly
+    try:
+        from .vscode_extension import handle_spark_event, is_vscode
+        if is_vscode():
+            handle_spark_event(msg)
+    except ImportError:
+        pass  # VS Code extension not available
+    
+    # Also send via traditional comm for JupyterLab compatibility
     monitor.send(msg)
 
 def get_spark_scala_version():
