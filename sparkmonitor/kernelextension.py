@@ -225,12 +225,15 @@ def sendToFrontEnd(msg):
     try:
         from .vscode_extension import handle_spark_event, is_vscode
         if is_vscode():
+            # Send to VS Code MIME type renderer
             handle_spark_event(msg)
+            return  # Only send to VS Code, not traditional comm
     except ImportError:
         pass  # VS Code extension not available
     
-    # Also send via traditional comm for JupyterLab compatibility
-    monitor.send(msg)
+    # Send via traditional comm for JupyterLab compatibility
+    if monitor and hasattr(monitor, 'send'):
+        monitor.send(msg)
 
 def get_spark_scala_version():
     cmd = "pyspark --version 2>&1 | grep -m 1  -Eo '[0-9]*[.][0-9]*[.][0-9]*[,]' | sed 's/,$//'"

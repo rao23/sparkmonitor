@@ -167,3 +167,11 @@ function getStatusColor(status?: string): string {
       return 'var(--vscode-foreground)';
   }
 }
+
+// import type { ActivationFunction } from 'vscode-notebook-renderer';
+
+// export const activate: ActivationFunction = context => ({
+//   renderOutputItem(outputItem, element) {
+//     element.innerText = JSON.stringify(outputItem.json(), null, 2);
+//   }
+// });
