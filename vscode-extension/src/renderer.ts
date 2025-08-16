@@ -13,36 +13,58 @@ import { store } from '../../src/store';
 import { NotebookStore } from '../../src/store/notebook';
 import { Cell } from '../../src/store/cell';
 import { CellWidget } from '../../src/components';
+import '../style/vscode.css';
 
 // VS Code renderer API: activation function returning renderOutputItem
 export const activate: ActivationFunction = (context) => {
   // Cache cell/notebook info by element (per cell)
   const requestIdToElement = new Map<string, HTMLElement>();
-  const cellNotebookInfo = new WeakMap<HTMLElement, { notebookId: string, cellId: string }>();
   const displayIdMap = new Map<string, { notebookId: string, cellId: string }>();
   const rootCache = new Map<string, Root>();
+  let displayID = '';
 
   if (typeof context.onDidReceiveMessage === 'function') {
     context.onDidReceiveMessage((msg) => {
-      console.log('Received message from extension:', msg);
       if (msg.type === 'cellAndNotebookInfo' && msg.requestId) {
-        console.log(`Received cell and notebook info for requestId: ${msg.requestId}`, msg);
         const element = requestIdToElement.get(msg.requestId);
         if (element) {
-          console.log('Found element for requestId:', msg.requestId, element);
           displayIdMap.set(msg.displayId, {
             notebookId: msg.notebookId,
             cellId: msg.cellId
           });
-          renderWithIds(element, msg.notebookId, msg.cellId, msg.data);
+          let root = rootCache.get(msg.cellId);
+          if (root) {
+            root.unmount();
+            rootCache.delete(msg.cellId);
+            root = undefined;
+          }
+          // rootCache.delete(msg.cellId); // Clear cached root for this cell
+          renderWithIds(element, msg.notebookId, msg.cellId, msg.data, true);
           requestIdToElement.delete(msg.requestId); // Clean up
         }
       } else if (msg.type === 'initNotebookStore') {
-        console.log('Initializing NotebookStore for notebookId:', msg.notebookId);
         if (!store.notebooks[msg.notebookId]) {
           store.notebooks[msg.notebookId] = new NotebookStore(msg.notebookId);
         }
+      } else if (msg.type === 'cellRemoved') {
+        const cellId = msg.cellId;
+        const notebookId = msg.notebookId;
+        // Remove root DOM element from rootCache and unmount
+        let root = rootCache.get(cellId);
+        if (root) {
+          root.unmount();
+          rootCache.delete(cellId);
+        }
+        if (notebookId in store.notebooks) {
+          const notebookStore = store.notebooks[notebookId];
+          if (notebookStore.cells[cellId]) {
+            notebookStore.onCellRemoved(cellId);
+          } else {
+            console.warn(`Cell ${cellId} not found in NotebookStore for removal.`);
+          }
+        }
       }
+
     });
   }
 
@@ -50,7 +72,8 @@ export const activate: ActivationFunction = (context) => {
     element: HTMLElement,
     notebookId: string,
     cellId: string,
-    data: any
+    data: any,
+    isCellReexecuted: boolean
   ) {
     console.log(`Rendering cell ${cellId} in notebook ${notebookId}`, data);
     // Ensure NotebookStore exists in the MobX store
@@ -66,12 +89,6 @@ export const activate: ActivationFunction = (context) => {
       notebookStore.cells[cellId] = new Cell(cellId, notebookStore);
     }
 
-    // Clear cell state if display_id changes, indicating a new output for cell reexecution
-    if (data && data.display_id && notebookStore.cells[cellId].lastDisplayId !== data.display_id) {
-      notebookStore.cells[cellId].lastDisplayId = data.display_id;
-      notebookStore.onCellExecutedAgain(cellId);
-    }
-
     // --- Handle SparkMonitor events here, with correct IDs ---
     if (data && data.msgtype === 'fromscala') {
       console.log('Handling Processing SparkMonitor message:', data);
@@ -84,6 +101,10 @@ export const activate: ActivationFunction = (context) => {
       switch (msg['msgtype']) {
         case 'sparkJobStart':
           console.log('Handling sparkJobStart for cellId:', cellId);
+          if (isCellReexecuted) {
+            console.log('Cell re-executed, handling accordingly.');
+            notebookStore.onCellExecutedAgain(cellId);
+          }
           notebookStore.onSparkJobStart(cellId, msg);
           break;
         case 'sparkJobEnd':
@@ -128,15 +149,12 @@ export const activate: ActivationFunction = (context) => {
       }
     }
 
-    // Render the React component for this cell
     let root = rootCache.get(cellId);
     if (!root) {
       console.log('Rendering new CellWidget for element:', element);
       const cellWidgetElement = React.createElement(CellWidget, { notebookId, cellId });
       if (createRoot) {
         root = createRoot(element);
-        // (element as any)._sparkmonitor_root = root;
-        console.log('Rendering new CellWidget YAYYY');
         if (!root) {
           console.error('Failed to create React root for element:', element);
           return;
@@ -148,17 +166,6 @@ export const activate: ActivationFunction = (context) => {
         (element as any)._sparkmonitor_root = true; // Just a flag for React 17
       }
     }
-    // const cellWidgetElement = React.createElement(CellWidget, { notebookId, cellId });
-    // if (createRoot) {
-    //   let root = (element as any)._sparkmonitor_root;
-    //   if (!root) {
-    //     root = createRoot(element);
-    //     (element as any)._sparkmonitor_root = root;
-    //   }
-    //   root.render(cellWidgetElement);
-    // } else {
-    //   ReactDOM.render(cellWidgetElement, element);
-    // }
   }
 
   return {
@@ -167,24 +174,13 @@ export const activate: ActivationFunction = (context) => {
         console.warn('No output item data provided');
         return;
       }
-      // Generate a unique requestId for this render
-      // const requestId = `req_${Date.now()}_${Math.random()}`;
-      // if (context && typeof context.postMessage === 'function') {
-      //   context.postMessage({
-      //     type: 'getCellAndNotebookInfo',
-      //     requestId
-      //   });
-      // }
       const data = JSON.parse(new TextDecoder().decode(outputItem.data()));
 
       // Check if we already have notebook/cell info for this element
-      console.log('OutputItem display ID:', outputItem.metadata.transient.display_id);
-      console.log('OutputItem:', outputItem);
-      console.log('OutputItem data:', data);
       const cached = displayIdMap.get(outputItem.metadata.transient.display_id);
       if (cached) {
         console.log(`Using cached notebookId: ${cached.notebookId}, cellId: ${cached.cellId}`);
-        renderWithIds(element, cached.notebookId, cached.cellId, data);
+        renderWithIds(element, cached.notebookId, cached.cellId, data, true);
         return;
       }
 
@@ -198,8 +194,6 @@ export const activate: ActivationFunction = (context) => {
           displayId: outputItem.metadata.transient.display_id,
         });
       }
-
-      element.innerText = 'Loading SparkMonitor info...';
     }
   }
 };

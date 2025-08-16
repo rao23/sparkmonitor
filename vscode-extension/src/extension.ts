@@ -9,15 +9,56 @@ export function activate(context: vscode.ExtensionContext) {
   outputChannel.appendLine('SparkMonitor extension started');
   outputChannel.show(); // This will make the output visible
 
+  let notebookCellCache = new Map<string, vscode.NotebookCell>();
+
   // Register messaging for your renderer
   const messaging = vscode.notebooks.createRendererMessaging('sparkmonitor-renderer');
 
+  for (const notebook of vscode.workspace.notebookDocuments) {
+    outputChannel.appendLine(`(Startup) Found already open notebook: ${notebook.uri.toString()}`);
+    messaging.postMessage({
+      type: 'initNotebookStore',
+      notebookId: notebook.uri.toString(),
+    });
+  }
+
   vscode.workspace.onDidOpenNotebookDocument((notebook) => {
+    console.log(`Opened notebook: ${notebook.uri.toString()}`);
     outputChannel.appendLine(`Opened notebook: ${notebook.uri.toString()}`);
     messaging.postMessage({
       type: 'initNotebookStore',
       notebookId: notebook.uri.toString(),
     });
+    for (const cell of notebook.getCells()) {
+      notebookCellCache.set(cell.document.uri.toString(), cell);
+    }
+  });
+
+  vscode.workspace.onDidChangeNotebookDocument((event) => {
+    const notebook = event.notebook;
+    const currentUris = new Set<string>(notebook.getCells().map(c => c.document.uri.toString()));
+
+    // Detect removed
+    for (const [uri, cell] of notebookCellCache) {
+      if (!currentUris.has(uri)) {
+        console.log("Removed:", uri);
+        notebookCellCache.delete(uri); // cleanup
+        messaging.postMessage({
+          type: 'cellRemoved',
+          cellId: cell.document.uri.toString(),
+          notebookId: notebook.uri.toString(),
+        });
+      }
+    }
+
+    // Detect added
+    for (const cell of notebook.getCells()) {
+      const uri = cell.document.uri.toString();
+      if (!notebookCellCache.has(uri)) {
+        console.log("Added:", uri);
+        notebookCellCache.set(uri, cell);
+      }
+    }
   });
 
   messaging.onDidReceiveMessage(async (e) => {

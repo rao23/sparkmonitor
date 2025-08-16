@@ -1,0 +1,24 @@
+/* VS Code Notebook Renderer CSS */
+@import url('../../style/styles.css');
+@import url('../../style/jobtable.css');
+@import url('../../style/taskdetails.css');
+@import url('../../style/timeline.css');
+
+.sparkMonitorCellRoot,
+.spark-monitor-container {
+  display: block;
+  width: 100%;
+  margin: 0; /* No JupyterLab cell margin, VS Code handles cell spacing */
+  box-sizing: border-box;
+}
+
+/* Remove JupyterLab-specific selector, or set margin as needed */
+.spark-monitor-container {
+  margin-top: 5px; /* If you want spacing above the output */
+}
+
+/* VS Code theme variable for background/border */
+.title {
+  border-bottom: 1px solid var(--vscode-notebook-cellBorderColor, #e0e0e0);
+  background: var(--vscode-editor-background, #fff);
+}
