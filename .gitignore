@@ -129,6 +129,7 @@ dmypy.json
 
 # TEMPORARY FILES
 vscode-extension/.history
+.history
 labextension/static
 Pipfile
 Pipfile.lock
