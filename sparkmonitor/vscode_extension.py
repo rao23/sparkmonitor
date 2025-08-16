@@ -10,13 +10,28 @@ from typing import Dict, Any, List
 
 class VSCodeSparkMonitor:
     """VS Code specific SparkMonitor handler"""
-    
-    def __init__(self):
+
+    def __init__(self, notebook_id: str = None):
         self.cell_jobs: Dict[str, List[Dict]] = {}
         self.current_cell_id = None
         self.execution_count = 0
-        self.cell_start_time = None  # Add this
-        
+        self.cell_start_time = None
+        self.notebook_id = notebook_id or self._detect_notebook_id()
+
+    def _detect_notebook_id(self):
+        # Try to get the notebook file path from environment or IPython
+        try:
+            from IPython import get_ipython
+            ip = get_ipython()
+            if ip and hasattr(ip, 'notebook'):  # Custom attribute
+                return getattr(ip, 'notebook', None)
+            # Try VS Code env var
+            if 'VSCODE_NOTEBOOK_FILE' in os.environ:
+                return os.environ['VSCODE_NOTEBOOK_FILE']
+        except Exception:
+            pass
+        return 'unknown_notebook'
+
     def is_vscode_environment(self) -> bool:
         """Detect if we're running in VS Code"""
         # Check for VS Code specific environment variables
@@ -65,18 +80,19 @@ class VSCodeSparkMonitor:
                 self.start_cell_execution(execution_count=exec_count)
             except:
                 self.start_cell_execution()
-        
+
         # Add timestamp if not present
         if 'timestamp' not in event_data:
             import time
             event_data['timestamp'] = int(time.time() * 1000)
-        
-        # Add cell context
+
+        # Add cell and notebook context
         event_data['cellId'] = self.current_cell_id
         event_data['executionCount'] = self.execution_count
-        
+        event_data['notebookId'] = self.notebook_id
+
         self.cell_jobs[self.current_cell_id].append(event_data)
-        
+
         # Output immediately for real-time updates (like JupyterLab)
         self.output_cell_data()
     
@@ -88,9 +104,10 @@ class VSCodeSparkMonitor:
         cell_data = {
             'cellId': self.current_cell_id,
             'executionCount': self.execution_count,
+            'notebookId': self.notebook_id,
             'jobs': self.cell_jobs[self.current_cell_id]
         }
-        
+        # print(f"DEBUG: Outputting cell data: {json.dumps(cell_data, indent=2)}")
         # Output as JSON with the specific MIME type that VS Code renderer expects
         self._display_vscode_output(cell_data)
 
@@ -100,7 +117,7 @@ class VSCodeSparkMonitor:
             from IPython.display import display
             
             # Debug: Print what we're outputting
-            print(f"DEBUG: Outputting MIME type with {len(data.get('jobs', []))} jobs")
+            # print(f"DEBUG: Outputting MIME type with {len(data.get('jobs', []))} jobs")
             
             # Create display data with our custom MIME type
             display_data = {
@@ -109,9 +126,9 @@ class VSCodeSparkMonitor:
             }
             
             # Debug: Print the MIME types
-            print("DEBUG: MIME types being output:", list(display_data.keys()))
+            # print("DEBUG: MIME types being output:", list(display_data.keys()))
             
-            display(display_data, raw=True)
+            # display(display_data, raw=True, display_id=self.current_cell_id)
             
         except ImportError:
             # Fallback if IPython is not available

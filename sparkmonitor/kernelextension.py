@@ -7,6 +7,11 @@ Adds a configuration object to users namespace.
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+from IPython.display import display
+from IPython import get_ipython
+
+from .vscode_extension import is_vscode
+
 import logging
 import os
 import subprocess
@@ -221,17 +226,25 @@ def sendToFrontEnd(msg):
     """Send a message to the frontend through the singleton monitor object."""
     global monitor
     
-    # Check if we're in VS Code and handle accordingly
-    try:
-        from .vscode_extension import handle_spark_event, is_vscode
-        if is_vscode():
-            # Send to VS Code MIME type renderer
-            handle_spark_event(msg)
-            return  # Only send to VS Code, not traditional comm
-    except ImportError:
-        pass  # VS Code extension not available
+    # # Check if we're in VS Code and handle accordingly
+    # try:
+    #     from .vscode_extension import handle_spark_event, is_vscode
+    #     if is_vscode():
+    #         # Send to VS Code MIME type renderer
+    #         handle_spark_event(msg)
+    #         return  # Only send to VS Code, not traditional comm
+    # except ImportError:
+    #     pass  # VS Code extension not available
     
     # Send via traditional comm for JupyterLab compatibility
+    # print(f"DEBUG: Sending message to frontend: {msg}")
+    if is_vscode():
+        display_data = {
+            'application/vnd.sparkmonitor+json': msg,
+        }
+        display(display_data, raw=True, display_id=get_ipython().execution_count)
+        return
+
     if monitor and hasattr(monitor, 'send'):
         monitor.send(msg)
 

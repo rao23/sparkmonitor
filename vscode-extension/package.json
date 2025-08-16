@@ -22,7 +22,8 @@
                 "mimeTypes": [
                     "application/vnd.sparkmonitor+json"
                 ],
-                "entrypoint": "./dist/renderer.js"
+                "entrypoint": "./dist/renderer.js",
+                "requiresMessaging": "always"
             }
         ]
     },

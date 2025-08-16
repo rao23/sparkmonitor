@@ -4,7 +4,7 @@
     "module": "esnext",
     "lib": ["ES2020", "DOM"],
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": "../",
     "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -14,8 +14,9 @@
     "resolveJsonModule": true,
     "declaration": false,
     "sourceMap": true,
+    "jsx": "react",
     "types": ["vscode-notebook-renderer"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

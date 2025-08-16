@@ -9,12 +9,14 @@ export class Cell {
   isRemoved = false;
   uniqueJobIds: Array<string> = [];
   taskChartStore: TaskChartStore;
+  lastDisplayId = '';
   constructor(
     public cellId: string,
     private notebookStore: NotebookStore
   ) {
     makeAutoObservable(this);
     this.taskChartStore = new TaskChartStore(this.notebookStore);
+    console.log('Created taskChartStore: ', this.taskChartStore, ' for cellId:', cellId);
   }
 
   toggleCollapseCellDisplay() {
