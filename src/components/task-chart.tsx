@@ -20,7 +20,7 @@ const plotDefaultLayout: Partial<Plotly.Layout> = {
   xaxis: {
     type: 'date',
     showticklabels: true,  // Show time tick labels on x-axis
-    tickformat: '%H:%M:%S',  // Show only time (hours:minutes:seconds), not date
+    tickformat: '%H:%M:%S.%L',  // Show only time (hours:minutes:seconds), not date
     title: {
       text: ''  // Remove x-axis title
     }
