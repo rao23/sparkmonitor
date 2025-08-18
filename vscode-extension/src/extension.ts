@@ -4,18 +4,12 @@ import * as vscode from 'vscode';
 export function activate(context: vscode.ExtensionContext) {
   console.log('SparkMonitor VS Code extension is activated');
 
-  // Create simple output channel for debugging
-  const outputChannel = vscode.window.createOutputChannel('SparkMonitor');
-  outputChannel.appendLine('SparkMonitor extension started');
-  outputChannel.show(); // This will make the output visible
-
   let notebookCellCache = new Map<string, vscode.NotebookCell>();
 
   // Register messaging for your renderer
   const messaging = vscode.notebooks.createRendererMessaging('sparkmonitor-renderer');
 
   for (const notebook of vscode.workspace.notebookDocuments) {
-    outputChannel.appendLine(`(Startup) Found already open notebook: ${notebook.uri.toString()}`);
     messaging.postMessage({
       type: 'initNotebookStore',
       notebookId: notebook.uri.toString(),
@@ -23,8 +17,6 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   vscode.workspace.onDidOpenNotebookDocument((notebook) => {
-    console.log(`Opened notebook: ${notebook.uri.toString()}`);
-    outputChannel.appendLine(`Opened notebook: ${notebook.uri.toString()}`);
     messaging.postMessage({
       type: 'initNotebookStore',
       notebookId: notebook.uri.toString(),
@@ -41,7 +33,6 @@ export function activate(context: vscode.ExtensionContext) {
     // Detect removed
     for (const [uri, cell] of notebookCellCache) {
       if (!currentUris.has(uri)) {
-        console.log("Removed:", uri);
         notebookCellCache.delete(uri); // cleanup
         messaging.postMessage({
           type: 'cellRemoved',
@@ -55,25 +46,16 @@ export function activate(context: vscode.ExtensionContext) {
     for (const cell of notebook.getCells()) {
       const uri = cell.document.uri.toString();
       if (!notebookCellCache.has(uri)) {
-        console.log("Added:", uri);
         notebookCellCache.set(uri, cell);
       }
     }
   });
 
-  messaging.onDidReceiveMessage(async (e) => {
-    outputChannel.appendLine('Extension received a message!');
-    console.log('Extension received a message!', e);
-
+  messaging.onDidReceiveMessage(async (e) => {  
     const { editor, message } = e;
     if (message.type === 'getCellAndNotebookInfo') {
-      outputChannel.appendLine('Processing getCellAndNotebookInfo request');
       // You may need to determine the correct cell if multiple outputs
       const cell = editor.notebook.cellAt(editor.selections[0]?.start ?? 0);
-      console.log('Cell and Notebook Info:', {
-        notebookId: editor.notebook.uri.toString(),
-        cellId: cell?.document.uri.toString() || 'unknown-cell'
-      });
       const notebookId = editor.notebook.uri.toString();
       const cellId = cell?.document.uri.toString() || 'unknown-cell';
 
@@ -85,7 +67,6 @@ export function activate(context: vscode.ExtensionContext) {
         notebookId,
         cellId
       });
-      outputChannel.appendLine('Sent response back to renderer');
     }
   });
 }
