@@ -10,7 +10,7 @@ from __future__ import unicode_literals
 from IPython.display import display
 from IPython import get_ipython
 
-from .vscode_extension import is_vscode
+# from .vscode_extension import is_vscode
 
 import logging
 import os
@@ -47,6 +47,12 @@ class ScalaMonitor:
         ipython is the instance of ZMQInteractiveShell
         """
         self.ipython = ipython
+        self.comm = None
+
+        # It is possible that messages were requested to send to frontend using
+        # send() before comm is ready. We'll buffer such messages and send them
+        # right after comm is ready. See target_func for more details.
+        self.buffered_msgs = []
 
     def start(self):
         """Creates the socket thread and returns assigned port"""
@@ -59,7 +65,14 @@ class ScalaMonitor:
 
     def send(self, msg):
         """Send a message to the frontend"""
-        self.comm.send(msg)
+        if self.comm is not None:
+            self.comm.send(msg)
+        else:
+            self.buffered_msgs.append(msg)
+            if len(self.buffered_msgs) > 1000:
+                logger.warn("Buffered too many messages before frontend comm is opened. "
+                            "Discard buffered messages")
+                self.buffered_msgs = []
 
     def handle_comm_message(self, msg):
         """Handle message received from frontend
@@ -83,6 +96,9 @@ class ScalaMonitor:
         def _recv(msg):
             self.handle_comm_message(msg)
         comm.send({'msgtype': 'commopen'})
+        for msg in self.buffered_msgs:
+            self.comm.send(msg)
+        self.buffered_msgs = []
 
 
 class SocketThread(Thread):
@@ -157,6 +173,8 @@ def load_ipython_extension(ipython):
     ipython is the InteractiveShell instance
     """
     global ip, monitor  # For Debugging
+    global run_id # For unique cell-execution identification
+    run_id = None
 
     global logger
     logger = logging.getLogger('tornado.sparkmonitor.kernel')
@@ -193,7 +211,30 @@ def load_ipython_extension(ipython):
                 'conf': conf, 
                 'swan_spark_conf': conf # For backward compatibility with fork
                 })  # Add to users namespace
+    
+    def pre_run_cell_hook(*args, **kwargs):
+        import uuid
+        global run_id
+        run_id = str(uuid.uuid4())  # Unique for each cell execution
+    
+    ip.events.register('pre_run_cell', pre_run_cell_hook)
 
+def is_vscode():
+    """Detect if running in VS Code"""
+    import os
+    vscode_indicators = [
+        'VSCODE_PID',
+        'VSCODE_IPC_HOOK',
+        'VSCODE_CLI',
+        'TERM_PROGRAM'
+    ]
+    for indicator in vscode_indicators:
+        if indicator in os.environ:
+            if indicator == 'TERM_PROGRAM' and os.environ[indicator] == 'vscode':
+                return True
+            elif indicator != 'TERM_PROGRAM':
+                return True
+    return False
 
 def configure(conf):
     """Configures the provided conf object.
@@ -208,13 +249,18 @@ def configure(conf):
     os.environ['SPARKMONITOR_KERNEL_PORT'] = str(port)
     logger.info(os.environ['SPARKMONITOR_KERNEL_PORT'])
     spark_scala_version = get_spark_scala_version()
-    if "2.13" in spark_scala_version:
-        jarpath = os.path.abspath(os.path.dirname(__file__)) + "/listener_2.13.jar"
+    if "2.11" in spark_scala_version:
+        jarpath = os.path.abspath(os.path.dirname(__file__)) + "/listener_2.11.jar"
         logger.info('Adding jar from %s ', jarpath)
         conf.set('spark.driver.extraClassPath', jarpath)
         conf.set('spark.extraListeners', 'sparkmonitor.listener.JupyterSparkMonitorListener')
     elif "2.12" in spark_scala_version:
         jarpath = os.path.abspath(os.path.dirname(__file__)) + "/listener_2.12.jar"
+        logger.info('Adding jar from %s ', jarpath)
+        conf.set('spark.driver.extraClassPath', jarpath)
+        conf.set('spark.extraListeners', 'sparkmonitor.listener.JupyterSparkMonitorListener')
+    elif "2.13" in spark_scala_version:
+        jarpath = os.path.abspath(os.path.dirname(__file__)) + "/listener_2.13.jar"
         logger.info('Adding jar from %s ', jarpath)
         conf.set('spark.driver.extraClassPath', jarpath)
         conf.set('spark.extraListeners', 'sparkmonitor.listener.JupyterSparkMonitorListener')
@@ -224,25 +270,13 @@ def configure(conf):
 
 def sendToFrontEnd(msg):
     """Send a message to the frontend through the singleton monitor object."""
-    global monitor
-    
-    # # Check if we're in VS Code and handle accordingly
-    # try:
-    #     from .vscode_extension import handle_spark_event, is_vscode
-    #     if is_vscode():
-    #         # Send to VS Code MIME type renderer
-    #         handle_spark_event(msg)
-    #         return  # Only send to VS Code, not traditional comm
-    # except ImportError:
-    #     pass  # VS Code extension not available
-    
-    # Send via traditional comm for JupyterLab compatibility
-    # print(f"DEBUG: Sending message to frontend: {msg}")
+    global monitor, run_id
+    # Check if we're in VS Code and handle accordingly
     if is_vscode():
         display_data = {
             'application/vnd.sparkmonitor+json': msg,
         }
-        display(display_data, raw=True, display_id=get_ipython().execution_count)
+        display(display_data, raw=True, display_id=run_id)
         return
 
     if monitor and hasattr(monitor, 'send'):
