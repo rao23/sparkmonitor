@@ -20,6 +20,15 @@ export class NotebookStore {
     makeAutoObservable(this);
   }
 
+  resetCell(cellId:string) {
+    const cell = this.cells[cellId];
+    if (cell) {
+      cell.reset();
+    } else {
+      console.error("Cell not found to reset");
+    }
+  }
+
   toggleHideAllDisplays() {
     this.hideAllDisplays = !this.hideAllDisplays;
   }

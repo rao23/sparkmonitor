@@ -64,6 +64,7 @@ export function activate(context: vscode.ExtensionContext) {
         type: 'cellAndNotebookInfo',
         requestId: message.requestId,
         displayId: message.displayId,
+        data: message.data,
         notebookId,
         cellId
       });

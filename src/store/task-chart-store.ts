@@ -11,6 +11,16 @@ export class TaskChartStore {
   numActiveTasks = 0;
 
   constructor(private notebookStore: NotebookStore) {}
+  reset() {
+    this.jobDataX = [];
+    this.jobDataY = [];
+    this.jobDataText = [];
+    this.executorDataX = [];
+    this.executorDataY = [];
+    this.taskDataX = [];
+    this.taskDataY = [];
+    this.numActiveTasks = 0;
+  }
 
   addExecutorData(time: number, numCores: number) {
     this.executorDataX.push(time);

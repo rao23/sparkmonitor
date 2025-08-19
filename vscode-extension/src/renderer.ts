@@ -21,25 +21,47 @@ export const activate: ActivationFunction = (context) => {
   const requestIdToElement = new Map<string, HTMLElement>();
   const displayIdMap = new Map<string, { notebookId: string, cellId: string }>();
   const rootCache = new Map<string, Root>();
-  let displayID = '';
 
   if (typeof context.onDidReceiveMessage === 'function') {
     context.onDidReceiveMessage((msg) => {
       if (msg.type === 'cellAndNotebookInfo' && msg.requestId) {
+        console.log('cellAndNotebookInfo Post Message:', msg);
         const element = requestIdToElement.get(msg.requestId);
         if (element) {
-          displayIdMap.set(msg.displayId, {
-            notebookId: msg.notebookId,
-            cellId: msg.cellId
-          });
-          let root = rootCache.get(msg.cellId);
-          if (root) {
-            root.unmount();
-            rootCache.delete(msg.cellId);
-            root = undefined;
+          console.log('cellAndNotebookInfo Cell Element Found:', element);
+          const displayId = msg.displayId;
+          if (!displayIdMap.has(displayId)) {
+            displayIdMap.set(displayId, {
+              notebookId: msg.notebookId,
+              cellId: msg.cellId
+            });
+            const notebookId = msg.notebookId;
+            const cellId = msg.cellId;
+            if (notebookId in store.notebooks) {
+              const notebookStore = store.notebooks[notebookId];
+              if (notebookStore.cells[cellId]) {
+                notebookStore.resetCell(cellId);
+                let root = rootCache.get(msg.cellId);
+                if (root) {
+                  root.unmount();
+                  rootCache.delete(msg.cellId);
+                  console.log('Unmounted existing root for cellId:', msg.cellId);
+                  // root = undefined;
+                  // renderWithIds(element, msg.notebookId, msg.cellId, msg.data, true);
+                }
+              }
+            }
           }
-          // rootCache.delete(msg.cellId); // Clear cached root for this cell
           renderWithIds(element, msg.notebookId, msg.cellId, msg.data, true);
+          // let root = rootCache.get(msg.cellId);
+          // if (root) {
+          //   root.unmount();
+          //   rootCache.delete(msg.cellId);
+          //   root = undefined;
+          // }
+          // rootCache.delete(msg.cellId); // Clear cached root for this cell
+          // store.notebooks[msg.notebookId].onCellRemoved(msg.cellId);
+          // renderWithIds(element, msg.notebookId, msg.cellId, msg.data, true);
           requestIdToElement.delete(msg.requestId); // Clean up
         }
       } else if (msg.type === 'initNotebookStore') {
@@ -64,7 +86,6 @@ export const activate: ActivationFunction = (context) => {
           }
         }
       }
-
     });
   }
 
@@ -75,7 +96,6 @@ export const activate: ActivationFunction = (context) => {
     data: any,
     isCellReexecuted: boolean
   ) {
-    console.log(`Rendering cell ${cellId} in notebook ${notebookId}`, data);
     // Ensure NotebookStore exists in the MobX store
     if (!store.notebooks[notebookId]) {
       console.log(`Creating new NotebookStore for notebookId: ${notebookId}`);
@@ -90,14 +110,15 @@ export const activate: ActivationFunction = (context) => {
     }
 
     // --- Handle SparkMonitor events here, with correct IDs ---
+    console.log('Sending handling this data - ', data);
     if (data && data.msgtype === 'fromscala') {
-      console.log('Handling Processing SparkMonitor message:', data);
+      // console.log('Handling Processing SparkMonitor message:', data);
       let msg = data.msg;
       if (typeof msg === 'string') {
         msg = JSON.parse(msg);
       }
-      console.log('Handling SparkMonitor message:', msg);
-      console.log('Handling SparkMonitor message type:', msg['msgtype']);
+      // console.log('Handling SparkMonitor message:', msg);
+      console.log('[Backend] Handling SparkMonitor message type:', msg['msgtype']);
       switch (msg['msgtype']) {
         case 'sparkJobStart':
           console.log('Handling sparkJobStart for cellId:', cellId);
@@ -108,39 +129,30 @@ export const activate: ActivationFunction = (context) => {
           notebookStore.onSparkJobStart(cellId, msg);
           break;
         case 'sparkJobEnd':
-          console.log('Handling sparkJobEnd for cellId:', cellId);
           notebookStore.onSparkJobEnd(msg);
           break;
         case 'sparkStageSubmitted':
-          console.log('Handling sparkStageSubmitted for cellId:', cellId);
           notebookStore.onSparkStageSubmitted(cellId, msg);
           break;
         case 'sparkStageCompleted':
-          console.log('Handling sparkStageCompleted for cellId:', cellId);
           notebookStore.onSparkStageCompleted(msg);
           break;
         case 'sparkStageActive':
-          console.log('Handling sparkStageActive for cellId:', cellId);
           notebookStore.onSparkStageActive(msg);
           break;
         case 'sparkTaskStart':
-          console.log('Handling sparkTaskStart for cellId:', cellId);
           notebookStore.onSparkTaskStart(msg);
           break;
         case 'sparkTaskEnd':
-          console.log('Handling sparkTaskEnd for cellId:', cellId);
           notebookStore.onSparkTaskEnd(msg);
           break;
         case 'sparkApplicationStart':
-          console.log('Handling sparkApplicationStart for cellId:', cellId);
           notebookStore.onSparkApplicationStart(msg);
           break;
         case 'sparkExecutorAdded':
-          console.log('Handling sparkExecutorAdded for cellId:', cellId);
           notebookStore.onSparkExecutorAdded(msg);
           break;
         case 'sparkExecutorRemoved':
-          console.log('Handling sparkExecutorRemoved for cellId:', cellId);
           notebookStore.onSparkExecutorRemoved(msg);
           break;
         default:
@@ -151,7 +163,7 @@ export const activate: ActivationFunction = (context) => {
 
     let root = rootCache.get(cellId);
     if (!root) {
-      console.log('Rendering new CellWidget for element:', element);
+      console.log('Rendering new CellWidget for cellId:', cellId);
       const cellWidgetElement = React.createElement(CellWidget, { notebookId, cellId });
       if (createRoot) {
         root = createRoot(element);
@@ -175,15 +187,26 @@ export const activate: ActivationFunction = (context) => {
         return;
       }
       const data = JSON.parse(new TextDecoder().decode(outputItem.data()));
+      let msg = data.msg;
+      if (typeof msg === 'string') {
+        msg = JSON.parse(msg);
+      }
+      // console.log('Received outputItem:', outputItem);
+      console.log('[Backend] Output item data:', data);
+      const display_id = outputItem?.metadata?.transient?.display_id;
+      console.log('For displayId: ', display_id, ' this message is:', msg);
 
       // Check if we already have notebook/cell info for this element
-      const cached = displayIdMap.get(outputItem.metadata.transient.display_id);
+      console.log('Check cache for display id: ', display_id);
+      console.log('Current cache state: ', displayIdMap);
+      const cached = displayIdMap.get(display_id);
       if (cached) {
-        console.log(`Using cached notebookId: ${cached.notebookId}, cellId: ${cached.cellId}`);
-        renderWithIds(element, cached.notebookId, cached.cellId, data, true);
+        console.log(`[Cache] Using cached notebookId: ${cached.notebookId}, cellId: ${cached.cellId}`);
+        renderWithIds(element, cached.notebookId, cached.cellId, data, false);
         return;
       }
 
+      console.log('[Cache] No cached notebook/cell info found, requesting from extension');
       // Otherwise, request info from the extension
       const requestId = `cell-${Date.now()}-${Math.random()}`;
       requestIdToElement.set(requestId, element);
@@ -192,6 +215,7 @@ export const activate: ActivationFunction = (context) => {
           type: 'getCellAndNotebookInfo',
           requestId,
           displayId: outputItem.metadata.transient.display_id,
+          data: data,       
         });
       }
     }
