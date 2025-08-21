@@ -192,12 +192,6 @@
 }
 
 .pm .tabbuttonactive {
-  /* Remove shadow/box styling */
-  /* box-shadow: 0 0 1px 0 rgb(0 0 0 / 46%) inset; */
-  /* background-color: rgb(0 0 0 / 20%); */
-  /* font-weight: bold; */
-  /* border: 0; */
-  
   /* Color the icon blue when active */
   filter: brightness(0) saturate(100%) invert(27%) sepia(96%) saturate(1458%) hue-rotate(213deg) brightness(96%) contrast(91%);
 }
@@ -205,6 +199,17 @@
 /* --------------Content-------------------- */
 .pm .tabcontent {
   border: 1px solid #eee;
+}
+
+.tabcontent {
+  padding: 8px;
+  background-color: #F0F4F9;
+  box-sizing: border-box;
+}
+.tabcontent-inner {
+  background-color: #FAFAFA;
+  border-radius: 4px;
+  height: 100%;
 }
 
 .sparkuiframe {
@@ -290,6 +295,8 @@
 .pm .taskcontainer {
   user-select: none;
 }
+
+/* -------------Task Chart--------------- */
 
 /* Task Chart Legend Spacing */
 .legend .traces .legendtext {

@@ -9,22 +9,21 @@ const Plot = createPlotlyComponent(Plotly);
 
 const plotDefaultLayout: Partial<Plotly.Layout> = {
   showlegend: true,
-  paper_bgcolor: '#FAFAFA',  // Same background for entire chart area including legend
-  plot_bgcolor: '#FAFAFA',   // Graph area background color
+  paper_bgcolor: '#FAFAFA',
+  plot_bgcolor: '#FAFAFA',
   margin: {
-    t: 50, // top margin
-    l: 30, // left margin
-    r: 30, // right margin
-    b: 60 // bottom margin
+    t: 50,
+    l: 30,
+    r: 30,
+    b: 60
   },
   xaxis: {
     type: 'date',
-    showticklabels: true,  // Show time tick labels on x-axis
-    tickformat: '%H:%M:%S.%L',  // Show only time (hours:minutes:seconds), not date
+    showticklabels: true,
+    tickformat: '%H:%M:%S.%L',
     title: {
-      text: ''  // Remove x-axis title
+      text: ''
     }
-    // title: 'Time',
   },
   yaxis: {
     fixedrange: true
@@ -37,7 +36,6 @@ const plotDefaultLayout: Partial<Plotly.Layout> = {
     xanchor: 'right',
     y: 1.08,
     yanchor: 'top',
-    // traceorder: 'normal',
     font: {
       family: 'sans-serif',
       size: 12,
@@ -47,9 +45,6 @@ const plotDefaultLayout: Partial<Plotly.Layout> = {
     tracegroupgap: 5,
     itemclick: 'toggle',
     itemdoubleclick: 'toggleothers'
-    // bgcolor: '#E2E2E2',
-    // bordercolor: '#FFFFFF',
-    // borderwidth: 2
   }
 };
 
@@ -62,7 +57,6 @@ const TaskChart = observer(() => {
   const [chartRefreshRevision, setRevision] = React.useState(1);
 
   const data = React.useMemo(() => {
-    // Main chart traces - no legend
     const tasktrace: Plotly.Data = {
       x: taskChartStore.taskDataX,
       y: taskChartStore.taskDataY,
@@ -71,7 +65,7 @@ const TaskChart = observer(() => {
       line: {
         color: '#6DD58C',
         width: 2,
-        shape: 'hv'  // Step chart - horizontal then vertical
+        shape: 'hv'
       },
       fill: 'tozeroy',
       fillcolor: 'rgba(109, 213, 140, 0.3)',
@@ -87,14 +81,13 @@ const TaskChart = observer(() => {
       line: {
         color: '#6991D6',
         width: 2,
-        shape: 'hv'  // Step chart - horizontal then vertical
+        shape: 'hv'
       },
       name: 'Executor Cores',
       legendgroup: 'executors',
       showlegend: false
     };
     
-    // Legend-only traces with circular markers
     const taskLegend: Plotly.Data = {
       x: [null],
       y: [null],
@@ -127,10 +120,9 @@ const TaskChart = observer(() => {
     const jobtrace: Plotly.Data = {
       x: taskChartStore.jobDataX,
       y: taskChartStore.jobDataY,
-      text: taskChartStore.jobDataText as any, //this.jobDataText,
+      text: taskChartStore.jobDataText as any,
       type: 'scatter',
       mode: 'markers',
-      // name: 'Jobs',
       showlegend: false,
       marker: {
         symbol: 23,
@@ -200,16 +192,8 @@ const TaskChart = observer(() => {
 
   return (
     <ErrorBoundary>
-      <div className="tabcontent" style={{ 
-        padding: '8px', 
-        backgroundColor: '#F0F4F9',
-        boxSizing: 'border-box'
-      }}>
-        <div style={{ 
-          backgroundColor: '#FAFAFA',
-          borderRadius: '4px',
-          height: '100%'
-        }}>
+      <div className="tabcontent">
+        <div className="tabcontent-inner">
           <Plot
             layout={plotLayout}
             data={data}
