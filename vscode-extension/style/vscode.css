@@ -4,6 +4,15 @@
 @import url('../../style/taskdetails.css');
 @import url('../../style/timeline.css');
 
+/* Default light mode values for VSCode */
+:root {
+  --sparkmonitor-bg-primary: #FFFFFF;
+  --sparkmonitor-bg-secondary: #F0F4F9;
+  --sparkmonitor-bg-tertiary: #DDE3EA;
+  --sparkmonitor-bg-quaternary: #FAFAFA;
+  --sparkmonitor-title-bg: #E9EEF6;
+}
+
 .sparkMonitorCellRoot,
 .spark-monitor-container {
   display: block;
@@ -12,4 +21,26 @@
   box-sizing: border-box;
   padding-left: 0 !important;
   padding-right: 0 !important;
+  border: none !important;
+}
+
+/* VSCode dark theme support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sparkmonitor-bg-primary: #000000; /* #FFFFFF becomes #000000 */
+    --sparkmonitor-bg-secondary: #444746; /* #F0F4F9 becomes #444746 */
+    --sparkmonitor-bg-tertiary: #303030; /* #DDE3EA becomes #303030 */
+    --sparkmonitor-bg-quaternary: #303030; /* #FAFAFA becomes #303030 */
+    --sparkmonitor-title-bg: #747775; /* Title bar becomes #747775 */
+  }
+}
+
+/* VSCode specific theme detection using vscode theme classes */
+.vscode-dark,
+.vscode-high-contrast {
+  --sparkmonitor-bg-primary: #000000; /* #FFFFFF becomes #000000 */
+  --sparkmonitor-bg-secondary: #444746; /* #F0F4F9 becomes #444746 */
+  --sparkmonitor-bg-tertiary: #303030; /* #DDE3EA becomes #303030 */
+  --sparkmonitor-bg-quaternary: #303030; /* #FAFAFA becomes #303030 */
+  --sparkmonitor-title-bg: #747775; /* Title bar becomes #747775 */
 }
