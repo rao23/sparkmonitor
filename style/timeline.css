@@ -1,56 +1,11 @@
-
-.vscode-dark .pm .vis-labelset .vis-label.visjobgroup .vis-inner,
-.vscode-dark .pm .vis-labelset .vis-label.visstagegroup .vis-inner {
-  color: #747474; /* Dark mode color */
+.vscode-dark .pm .vis-time-axis .vis-text.vis-minor {
+  color: #FFFFFF;
+  fill: #FFFFFF;
 }
 
-.vscode-dark .pm .vis-timeline {
-  border-top: 1px solid #747474 !important;
-}
-
-.vscode-dark .pm .vis-panel.vis-top {
-  border-bottom: 1px solid #747474 !important;
-}
-
-.vscode-dark .pm .vis-panel.vis-center {
-  border-top: 1px solid #747474 !important;
-  border-bottom: 1px solid #747474 !important;
-}
-
-.vscode-dark .pm .vis-time-axis {
-  border-bottom: 1px solid #747474 !important;
-}
-
-/* timeline.css */
-.vscode-dark .pm .vis-labelset .vis-label {
-  border-color: #747474 !important; /* Set the border color for the Jobs group label */
-}
-
-.vscode-dark .pm .vis-labelset .vis-label.visjobgroup {
-  border-top-color: #f80505 !important;
-  border-bottom-color: #747474 !important;
-}
-
-/* Target the top border of the entire timeline container */
-.vscode-dark .pm .vis-timeline {
-  border-top-color: #747474 !important;
-}
-
-/* Target the border of the top panel, which is the time axis */
-.vscode-dark .pm .vis-panel.vis-top {
-  border-color: #747474 !important;
-}
-
-/* Correct the color of the vertical grid lines (both major and minor) */
-/* These are drawn with a 'border-left' property */
-.vscode-dark .pm .vis-grid.vis-major,
-.vscode-dark .pm .vis-grid.vis-minor {
-  border-left-color: #747474 !important;
-}
-
-/* Ensure the main horizontal line (X-axis) is colored correctly */
-.vscode-dark .pm .vis-time-axis {
-  border-bottom-color: #747474 !important;
+[data-jp-theme-light="false"] .pm .vis-time-axis .vis-text.vis-minor {
+  color: #FFFFFF;
+  fill: #FFFFFF;
 }
 
 .pm .vis-item .vis-item-content {
@@ -111,9 +66,9 @@
 }
 
 .pm .vis-item.itemrunning {
-  background-color: #7FCFFF;    /* Updated blue for running */
+  background-color: #7FCFFF;
   border: 0;
-  border-radius: 6px;          /* Reduced radius */
+  border-radius: 6px;
 }
 
 .pm .taskbarsvg {
@@ -210,6 +165,14 @@
   color: #1F1F1F;
 }
 
+/* Global timeline text color (Dark Mode)*/
+[data-jp-theme-light="false"] .pm .vis-timeline,
+[data-jp-theme-light="false"] .pm .vis-timeline *,
+.vscode-dark .pm .vis-timeline,
+.vscode-dark .pm .vis-timeline * {
+  color: #FFFFFF;
+}
+
 /* Global timeline text color */
 .pm .timelinewrapper,
 .pm .timelinewrapper *,
@@ -233,8 +196,6 @@
 .pm .vis-item.stage.RUNNING {
   background-color: #7FCFFF !important;
   border-radius: 6px !important;
-  /* border-width: 1px !important;
-  border-style: solid !important; */
   height: 12px !important;
   font-size: 10px !important;
 }
@@ -335,15 +296,4 @@
   white-space: nowrap !important;
   overflow: visible !important;
   color: #1F1F1F !important;
-}
-
-.vscode-dark .pm .vis-timeline,
-.vscode-dark .pm .vis-panel.vis-center,
-.vscode-dark .pm .vis-panel.vis-top,
-.vscode-dark .pm .vis-panel.vis-bottom,
-.vscode-high-contrast .pm .vis-timeline,
-.vscode-high-contrast .pm .vis-panel.vis-center,
-.vscode-high-contrast .pm .vis-panel.vis-top,
-.vscode-high-contrast .pm .vis-panel.vis-bottom {
-  border-color: #747474;
 }
