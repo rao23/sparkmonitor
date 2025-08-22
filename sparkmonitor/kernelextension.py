@@ -179,7 +179,7 @@ def load_ipython_extension(ipython):
     global logger
     logger = logging.getLogger('tornado.sparkmonitor.kernel')
     logger.name = 'SparkMonitorKernel'
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.ERROR)
     logger.propagate = True
 
     if ipykernel_imported:
@@ -219,23 +219,6 @@ def load_ipython_extension(ipython):
     
     ip.events.register('pre_run_cell', pre_run_cell_hook)
 
-def is_vscode():
-    """Detect if running in VS Code"""
-    import os
-    vscode_indicators = [
-        'VSCODE_PID',
-        'VSCODE_IPC_HOOK',
-        'VSCODE_CLI',
-        'TERM_PROGRAM'
-    ]
-    for indicator in vscode_indicators:
-        if indicator in os.environ:
-            if indicator == 'TERM_PROGRAM' and os.environ[indicator] == 'vscode':
-                return True
-            elif indicator != 'TERM_PROGRAM':
-                return True
-    return False
-
 def configure(conf):
     """Configures the provided conf object.
 
@@ -271,14 +254,14 @@ def configure(conf):
 def sendToFrontEnd(msg):
     """Send a message to the frontend through the singleton monitor object."""
     global monitor, run_id
-    # Check if we're in VS Code and handle accordingly
-    if is_vscode():
-        display_data = {
-            'application/vnd.sparkmonitor+json': msg,
-        }
-        display(display_data, raw=True, display_id=run_id)
-        return
 
+    # send spark data to vscode jupyter
+    display_data = {
+        'application/vnd.sparkmonitor+json': msg,
+    }
+    display(display_data, raw=True, display_id=run_id)
+
+    # send spark data to jupyter lab and notebook
     if monitor and hasattr(monitor, 'send'):
         monitor.send(msg)
 
