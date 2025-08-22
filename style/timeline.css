@@ -1,13 +1,62 @@
 
-.pm .vis-labelset .vis-label .vis-inner {
-  width: 100px;
-  color: #1F1F1F;
+.vscode-dark .pm .vis-labelset .vis-label.visjobgroup .vis-inner,
+.vscode-dark .pm .vis-labelset .vis-label.visstagegroup .vis-inner {
+  color: #747474; /* Dark mode color */
+}
+
+.vscode-dark .pm .vis-timeline {
+  border-top: 1px solid #747474 !important;
+}
+
+.vscode-dark .pm .vis-panel.vis-top {
+  border-bottom: 1px solid #747474 !important;
+}
+
+.vscode-dark .pm .vis-panel.vis-center {
+  border-top: 1px solid #747474 !important;
+  border-bottom: 1px solid #747474 !important;
+}
+
+.vscode-dark .pm .vis-time-axis {
+  border-bottom: 1px solid #747474 !important;
+}
+
+/* timeline.css */
+.vscode-dark .pm .vis-labelset .vis-label {
+  border-color: #747474 !important; /* Set the border color for the Jobs group label */
+}
+
+.vscode-dark .pm .vis-labelset .vis-label.visjobgroup {
+  border-top-color: #f80505 !important;
+  border-bottom-color: #747474 !important;
+}
+
+/* Target the top border of the entire timeline container */
+.vscode-dark .pm .vis-timeline {
+  border-top-color: #747474 !important;
+}
+
+/* Target the border of the top panel, which is the time axis */
+.vscode-dark .pm .vis-panel.vis-top {
+  border-color: #747474 !important;
+}
+
+/* Correct the color of the vertical grid lines (both major and minor) */
+/* These are drawn with a 'border-left' property */
+.vscode-dark .pm .vis-grid.vis-major,
+.vscode-dark .pm .vis-grid.vis-minor {
+  border-left-color: #747474 !important;
+}
+
+/* Ensure the main horizontal line (X-axis) is colored correctly */
+.vscode-dark .pm .vis-time-axis {
+  border-bottom-color: #747474 !important;
 }
 
 .pm .vis-item .vis-item-content {
   padding: 0 !important;
   width: 100% !important;
-  color: #1F1F1F;
+  /* color: #1F1F1F; */
   text-align: center !important;
   line-height: 12px !important;
   vertical-align: middle !important;
@@ -166,7 +215,7 @@
 .pm .timelinewrapper *,
 .pm .vis-timeline,
 .pm .vis-timeline * {
-  color: #1F1F1F !important;
+  color: #747474;
 }
 
 /* Exception for failed items to keep white text on red background */
@@ -285,4 +334,16 @@
   transform: translateY(-50%) !important;
   white-space: nowrap !important;
   overflow: visible !important;
+  color: #1F1F1F !important;
+}
+
+.vscode-dark .pm .vis-timeline,
+.vscode-dark .pm .vis-panel.vis-center,
+.vscode-dark .pm .vis-panel.vis-top,
+.vscode-dark .pm .vis-panel.vis-bottom,
+.vscode-high-contrast .pm .vis-timeline,
+.vscode-high-contrast .pm .vis-panel.vis-center,
+.vscode-high-contrast .pm .vis-panel.vis-top,
+.vscode-high-contrast .pm .vis-panel.vis-bottom {
+  border-color: #747474;
 }
