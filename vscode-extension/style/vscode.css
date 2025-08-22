@@ -1,11 +1,10 @@
-/* Jupyter Lab Specific CSS */
+/* VS Code Notebook Renderer CSS */
+@import url('../../style/styles.css');
+@import url('../../style/jobtable.css');
+@import url('../../style/taskdetails.css');
+@import url('../../style/timeline.css');
 
-@import url('./styles.css');
-@import url('./jobtable.css');
-@import url('./taskdetails.css');
-@import url('./timeline.css');
-
-/* Default light mode values for JupyterLab */
+/* Default light mode values for VSCode */
 :root {
   --sparkmonitor-bg-primary: #FFFFFF;
   --sparkmonitor-bg-secondary: #F0F4F9;
@@ -14,29 +13,19 @@
   --sparkmonitor-title-bg: #E9EEF6;
 }
 
-.spark-monitor-cell-widget {
-  margin-left: calc(
-    var(--jp-cell-collapser-width) + var(--jp-cell-prompt-width)
-  );
-}
-
-/* New container styling for DOM-based insertion */
+.sparkMonitorCellRoot,
 .spark-monitor-container {
   display: block;
   width: 100%;
-  margin-left: calc(
-    var(--jp-cell-collapser-width) + var(--jp-cell-prompt-width)
-  );
+  margin: 0 !important; /* Force no margin */
+  box-sizing: border-box;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  border: none !important;
 }
 
-/* Ensure proper spacing between input and spark monitor */
-.spark-monitor-container + .jp-Cell-outputWrapper {
-  margin-top: 5px;
-}
-
-/* JupyterLab dark theme support - using both theme-specific and prefers-color-scheme detection */
+/* VSCode dark theme support */
 @media (prefers-color-scheme: dark) {
-  /* This covers system dark mode when JupyterLab theme doesn't explicitly set variables */
   :root {
     --sparkmonitor-bg-primary: #000000; /* #FFFFFF becomes #000000 */
     --sparkmonitor-bg-secondary: #444746; /* #F0F4F9 becomes #444746 */
@@ -46,10 +35,9 @@
   }
 }
 
-/* JupyterLab specific dark theme detection using CSS custom properties */
-[data-jp-theme-light="false"],
-.jp-Cell[data-jp-theme-light="false"],
-.jp-Notebook[data-jp-theme-light="false"] {
+/* VSCode specific theme detection using vscode theme classes */
+.vscode-dark,
+.vscode-high-contrast {
   --sparkmonitor-bg-primary: #000000; /* #FFFFFF becomes #000000 */
   --sparkmonitor-bg-secondary: #444746; /* #F0F4F9 becomes #444746 */
   --sparkmonitor-bg-tertiary: #303030; /* #DDE3EA becomes #303030 */

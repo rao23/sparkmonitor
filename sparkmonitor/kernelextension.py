@@ -7,6 +7,11 @@ Adds a configuration object to users namespace.
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+from IPython.display import display
+from IPython import get_ipython
+
+# from .vscode_extension import is_vscode
+
 import logging
 import os
 import subprocess
@@ -42,6 +47,12 @@ class ScalaMonitor:
         ipython is the instance of ZMQInteractiveShell
         """
         self.ipython = ipython
+        self.comm = None
+
+        # It is possible that messages were requested to send to frontend using
+        # send() before comm is ready. We'll buffer such messages and send them
+        # right after comm is ready. See target_func for more details.
+        self.buffered_msgs = []
 
     def start(self):
         """Creates the socket thread and returns assigned port"""
@@ -54,7 +65,14 @@ class ScalaMonitor:
 
     def send(self, msg):
         """Send a message to the frontend"""
-        self.comm.send(msg)
+        if self.comm is not None:
+            self.comm.send(msg)
+        else:
+            self.buffered_msgs.append(msg)
+            if len(self.buffered_msgs) > 1000:
+                logger.warn("Buffered too many messages before frontend comm is opened. "
+                            "Discard buffered messages")
+                self.buffered_msgs = []
 
     def handle_comm_message(self, msg):
         """Handle message received from frontend
@@ -78,6 +96,9 @@ class ScalaMonitor:
         def _recv(msg):
             self.handle_comm_message(msg)
         comm.send({'msgtype': 'commopen'})
+        for msg in self.buffered_msgs:
+            self.comm.send(msg)
+        self.buffered_msgs = []
 
 
 class SocketThread(Thread):
@@ -152,11 +173,13 @@ def load_ipython_extension(ipython):
     ipython is the InteractiveShell instance
     """
     global ip, monitor  # For Debugging
+    global run_id # For unique cell-execution identification
+    run_id = None
 
     global logger
     logger = logging.getLogger('tornado.sparkmonitor.kernel')
     logger.name = 'SparkMonitorKernel'
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.ERROR)
     logger.propagate = True
 
     if ipykernel_imported:
@@ -188,7 +211,13 @@ def load_ipython_extension(ipython):
                 'conf': conf, 
                 'swan_spark_conf': conf # For backward compatibility with fork
                 })  # Add to users namespace
-
+    
+    def pre_run_cell_hook(*args, **kwargs):
+        import uuid
+        global run_id
+        run_id = str(uuid.uuid4())  # Unique for each cell execution
+    
+    ip.events.register('pre_run_cell', pre_run_cell_hook)
 
 def configure(conf):
     """Configures the provided conf object.
@@ -203,13 +232,18 @@ def configure(conf):
     os.environ['SPARKMONITOR_KERNEL_PORT'] = str(port)
     logger.info(os.environ['SPARKMONITOR_KERNEL_PORT'])
     spark_scala_version = get_spark_scala_version()
-    if "2.13" in spark_scala_version:
-        jarpath = os.path.abspath(os.path.dirname(__file__)) + "/listener_2.13.jar"
+    if "2.11" in spark_scala_version:
+        jarpath = os.path.abspath(os.path.dirname(__file__)) + "/listener_2.11.jar"
         logger.info('Adding jar from %s ', jarpath)
         conf.set('spark.driver.extraClassPath', jarpath)
         conf.set('spark.extraListeners', 'sparkmonitor.listener.JupyterSparkMonitorListener')
     elif "2.12" in spark_scala_version:
         jarpath = os.path.abspath(os.path.dirname(__file__)) + "/listener_2.12.jar"
+        logger.info('Adding jar from %s ', jarpath)
+        conf.set('spark.driver.extraClassPath', jarpath)
+        conf.set('spark.extraListeners', 'sparkmonitor.listener.JupyterSparkMonitorListener')
+    elif "2.13" in spark_scala_version:
+        jarpath = os.path.abspath(os.path.dirname(__file__)) + "/listener_2.13.jar"
         logger.info('Adding jar from %s ', jarpath)
         conf.set('spark.driver.extraClassPath', jarpath)
         conf.set('spark.extraListeners', 'sparkmonitor.listener.JupyterSparkMonitorListener')
@@ -219,8 +253,17 @@ def configure(conf):
 
 def sendToFrontEnd(msg):
     """Send a message to the frontend through the singleton monitor object."""
-    global monitor
-    monitor.send(msg)
+    global monitor, run_id
+
+    # send spark data to vscode jupyter
+    display_data = {
+        'application/vnd.sparkmonitor+json': msg,
+    }
+    display(display_data, raw=True, display_id=run_id)
+
+    # send spark data to jupyter lab and notebook
+    if monitor and hasattr(monitor, 'send'):
+        monitor.send(msg)
 
 def get_spark_scala_version():
     cmd = "pyspark --version 2>&1 | grep -m 1  -Eo '[0-9]*[.][0-9]*[.][0-9]*[,]' | sed 's/,$//'"

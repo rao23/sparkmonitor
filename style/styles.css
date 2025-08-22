@@ -2,12 +2,22 @@
   background-color: #f7f7f7;
   margin: 8px 0;
   font-family: 'Roboto';
+  border: none; /* Remove any default border */
+}
+
+/* Define CSS custom properties with light mode defaults */
+:root {
+  --sparkmonitor-bg-primary: #FFFFFF;
+  --sparkmonitor-bg-secondary: #F0F4F9;
+  --sparkmonitor-bg-tertiary: #DDE3EA;
+  --sparkmonitor-bg-quaternary: #FAFAFA;
+  --sparkmonitor-title-bg: #E9EEF6;
 }
 
 /* --------------Title Bar-------------------- */
 .pm .title {
   /* background-color: #f37600; */ /* Original */
-  background-color: #E9EEF6; /* New light gray color */
+  background-color: var(--sparkmonitor-title-bg, #E9EEF6); /* New light gray color */
   color: #333; /* Darker text for better contrast */
   display: flex;
   flex-flow: row wrap;
@@ -192,19 +202,59 @@
 }
 
 .pm .tabbuttonactive {
-  /* Remove shadow/box styling */
-  /* box-shadow: 0 0 1px 0 rgb(0 0 0 / 46%) inset; */
-  /* background-color: rgb(0 0 0 / 20%); */
-  /* font-weight: bold; */
-  /* border: 0; */
-  
   /* Color the icon blue when active */
   filter: brightness(0) saturate(100%) invert(27%) sepia(96%) saturate(1458%) hue-rotate(213deg) brightness(96%) contrast(91%);
 }
 
 /* --------------Content-------------------- */
 .pm .tabcontent {
-  border: 1px solid #eee;
+  border: none; /* Remove outer border */
+}
+
+.tabcontent {
+  padding: 8px;
+  background-color: var(--sparkmonitor-bg-secondary, #F0F4F9);
+  box-sizing: border-box;
+}
+.tabcontent-inner {
+  background-color: var(--sparkmonitor-bg-quaternary, #FAFAFA);
+  border-radius: 4px;
+  height: 100%;
+}
+
+/* Dark mode support for content areas */
+@media (prefers-color-scheme: dark) {
+  .pm .title {
+    background-color: #747775; /* Title bar becomes #747775 in dark mode */
+    color: #E1E3E1; /* Text color for Apache Spark title */
+  }
+  
+  .tabcontent {
+    background-color: var(--sparkmonitor-bg-secondary, #444746); /* #F0F4F9 becomes #444746 */
+  }
+  .tabcontent-inner {
+    background-color: var(--sparkmonitor-bg-quaternary, #303030); /* #FAFAFA becomes #303030 */
+  }
+}
+
+/* Platform-specific dark theme support using CSS custom properties */
+[data-jp-theme-light="false"] .pm .title,
+.vscode-dark .pm .title,
+.vscode-high-contrast .pm .title {
+  background-color: #747775; /* Title bar becomes #747775 in dark mode */
+  color: #E1E3E1; /* Text color for Apache Spark title */
+}
+
+[data-jp-theme-light="false"] .tabcontent,
+.vscode-dark .tabcontent,
+.vscode-high-contrast .tabcontent {
+  background-color: var(--sparkmonitor-bg-secondary, #444746); /* #F0F4F9 becomes #444746 */
+}
+
+[data-jp-theme-light="false"] .tabcontent-inner,
+.vscode-dark .tabcontent-inner,
+.vscode-high-contrast .tabcontent-inner {
+  background-color: var(--sparkmonitor-bg-quaternary, #303030); /* #FAFAFA becomes #303030 */
 }
 
 .sparkuiframe {
@@ -291,6 +341,8 @@
   user-select: none;
 }
 
+/* -------------Task Chart--------------- */
+
 /* Task Chart Legend Spacing */
 .legend .traces .legendtext {
   transform: translateX(-5px);
@@ -341,4 +393,89 @@ g.legend g.traces:hover .legendtext text {
   font-weight: normal !important;
   font-size: 12px !important;
   fill: #000 !important;
+}
+
+/* Dark mode styling for Plotly graphs */
+@media (prefers-color-scheme: dark) {
+  .js-plotly-plot .plot-container .plotly {
+    background-color: #303030 !important; /* Graph background */
+  }
+  
+  .js-plotly-plot .annotation-text {
+    fill: #E1E3E1 !important; /* Text color for annotations */
+  }
+  
+  .js-plotly-plot .xtick text,
+  .js-plotly-plot .ytick text,
+  .js-plotly-plot .g-xtitle text,
+  .js-plotly-plot .g-ytitle text,
+  .js-plotly-plot .g-gtitle text {
+    fill: #E1E3E1 !important; /* Axis text and title colors */
+  }
+  
+  .js-plotly-plot .xaxislayer-above .xtick line,
+  .js-plotly-plot .yaxislayer-above .ytick line,
+  .js-plotly-plot .xaxislayer-above .xgrid,
+  .js-plotly-plot .yaxislayer-above .ygrid {
+    stroke: #E1E3E1 !important; /* Axis lines and grid colors */
+  }
+}
+
+/* JupyterLab dark mode for Plotly */
+[data-jp-theme-light="false"] .js-plotly-plot .plot-container .plotly {
+  background-color: #303030 !important;
+}
+
+[data-jp-theme-light="false"] .js-plotly-plot .annotation-text {
+  fill: #E1E3E1 !important;
+}
+
+[data-jp-theme-light="false"] .js-plotly-plot .xtick text,
+[data-jp-theme-light="false"] .js-plotly-plot .ytick text,
+[data-jp-theme-light="false"] .js-plotly-plot .g-xtitle text,
+[data-jp-theme-light="false"] .js-plotly-plot .g-ytitle text,
+[data-jp-theme-light="false"] .js-plotly-plot .g-gtitle text {
+  fill: #E1E3E1 !important;
+}
+
+[data-jp-theme-light="false"] .js-plotly-plot .xaxislayer-above .xtick line,
+[data-jp-theme-light="false"] .js-plotly-plot .yaxislayer-above .ytick line,
+[data-jp-theme-light="false"] .js-plotly-plot .xaxislayer-above .xgrid,
+[data-jp-theme-light="false"] .js-plotly-plot .yaxislayer-above .ygrid {
+  stroke: #E1E3E1 !important;
+}
+
+/* VSCode dark mode for Plotly */
+.vscode-dark .js-plotly-plot .plot-container .plotly,
+.vscode-high-contrast .js-plotly-plot .plot-container .plotly {
+  background-color: #303030 !important;
+}
+
+.vscode-dark .js-plotly-plot .annotation-text,
+.vscode-high-contrast .js-plotly-plot .annotation-text {
+  fill: #E1E3E1 !important;
+}
+
+.vscode-dark .js-plotly-plot .xtick text,
+.vscode-dark .js-plotly-plot .ytick text,
+.vscode-dark .js-plotly-plot .g-xtitle text,
+.vscode-dark .js-plotly-plot .g-ytitle text,
+.vscode-dark .js-plotly-plot .g-gtitle text,
+.vscode-high-contrast .js-plotly-plot .xtick text,
+.vscode-high-contrast .js-plotly-plot .ytick text,
+.vscode-high-contrast .js-plotly-plot .g-xtitle text,
+.vscode-high-contrast .js-plotly-plot .g-ytitle text,
+.vscode-high-contrast .js-plotly-plot .g-gtitle text {
+  fill: #E1E3E1 !important;
+}
+
+.vscode-dark .js-plotly-plot .xaxislayer-above .xtick line,
+.vscode-dark .js-plotly-plot .yaxislayer-above .ytick line,
+.vscode-dark .js-plotly-plot .xaxislayer-above .xgrid,
+.vscode-dark .js-plotly-plot .yaxislayer-above .ygrid,
+.vscode-high-contrast .js-plotly-plot .xaxislayer-above .xtick line,
+.vscode-high-contrast .js-plotly-plot .yaxislayer-above .ytick line,
+.vscode-high-contrast .js-plotly-plot .xaxislayer-above .xgrid,
+.vscode-high-contrast .js-plotly-plot .yaxislayer-above .ygrid {
+  stroke: #E1E3E1 !important;
 }

@@ -17,6 +17,14 @@ export class Cell {
     this.taskChartStore = new TaskChartStore(this.notebookStore);
   }
 
+  reset() {
+    this.view = 'jobs';
+    this.isCollapsed = false;
+    this.isRemoved = false;
+    this.uniqueJobIds = [];
+    this.taskChartStore.reset();
+  }
+
   toggleCollapseCellDisplay() {
     this.isCollapsed = !this.isCollapsed;
   }

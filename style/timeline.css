@@ -1,25 +1,74 @@
-.pm .timelinewrapper {
-  max-height: 400px;
-  overflow-y: auto;
-  clear: both;
+
+.vscode-dark .pm .vis-labelset .vis-label.visjobgroup .vis-inner,
+.vscode-dark .pm .vis-labelset .vis-label.visstagegroup .vis-inner {
+  color: #747474; /* Dark mode color */
 }
 
-.pm .vis-labelset .vis-label .vis-inner {
-  width: 100px;
+.vscode-dark .pm .vis-timeline {
+  border-top: 1px solid #747474 !important;
 }
 
-.pm .vis-item {
-  border-radius: 0;
-  font-size: smaller;
+.vscode-dark .pm .vis-panel.vis-top {
+  border-bottom: 1px solid #747474 !important;
+}
+
+.vscode-dark .pm .vis-panel.vis-center {
+  border-top: 1px solid #747474 !important;
+  border-bottom: 1px solid #747474 !important;
+}
+
+.vscode-dark .pm .vis-time-axis {
+  border-bottom: 1px solid #747474 !important;
+}
+
+/* timeline.css */
+.vscode-dark .pm .vis-labelset .vis-label {
+  border-color: #747474 !important; /* Set the border color for the Jobs group label */
+}
+
+.vscode-dark .pm .vis-labelset .vis-label.visjobgroup {
+  border-top-color: #f80505 !important;
+  border-bottom-color: #747474 !important;
+}
+
+/* Target the top border of the entire timeline container */
+.vscode-dark .pm .vis-timeline {
+  border-top-color: #747474 !important;
+}
+
+/* Target the border of the top panel, which is the time axis */
+.vscode-dark .pm .vis-panel.vis-top {
+  border-color: #747474 !important;
+}
+
+/* Correct the color of the vertical grid lines (both major and minor) */
+/* These are drawn with a 'border-left' property */
+.vscode-dark .pm .vis-grid.vis-major,
+.vscode-dark .pm .vis-grid.vis-minor {
+  border-left-color: #747474 !important;
+}
+
+/* Ensure the main horizontal line (X-axis) is colored correctly */
+.vscode-dark .pm .vis-time-axis {
+  border-bottom-color: #747474 !important;
 }
 
 .pm .vis-item .vis-item-content {
-  padding: 0;
-  width: 100%;
+  padding: 0 !important;
+  width: 100% !important;
+  /* color: #1F1F1F; */
+  text-align: center !important;
+  line-height: 12px !important;
+  vertical-align: middle !important;
+  position: relative !important;
+  left: 0 !important;
+  right: 0 !important;
+  margin: 0 auto !important;
 }
 
 .pm .vis-time-axis {
   font-size: smaller;
+  color: #1F1F1F;
 }
 
 .pm .vis-tooltip {
@@ -28,23 +77,22 @@
 }
 
 .pm .vis-item.vis-background {
-  background-color: rgb(191 191 191 / 58%);
+  background-color: rgba(109, 213, 140, 0.58);
 }
 
 .pm .vis-custom-time {
   pointer-events: none;
-  background-color: #42a5f5;
+  background-color: #6DD58C;
 }
 
 .pm .vis-item.itemfinished {
-  /* :not(.vis-selected) { */
-  background-color: #90dc34;
-  border-color: #6c9d34;
+  background-color: #6DD58C;
+  border-color: #5BB573;
   border: 0;
+  border-radius: 8px;
 }
 
 .pm .vis-item.itemfailed {
-  /* :not(.vis-selected) {  */
   background-color: #f44336;
   border-color: rgb(183 13 0);
   color: white;
@@ -52,25 +100,32 @@
 }
 
 .pm .vis-item.itemfinished:active {
-  background-color: #6c9d34;
+  background-color: #5BB573;
 }
 
 .pm .vis-selected {
-  border-color: #ffc200;
-  background-color: #ffc200;
+  border-color: #5BB573;
+  background-color: #5BB573;
   border: 0;
+  border-radius: 8px;
 }
 
 .pm .vis-item.itemrunning {
-  /* :not(.vis-selected) { */
-  background-color: rgb(134 199 251);
+  background-color: #7FCFFF;    /* Updated blue for running */
   border: 0;
+  border-radius: 6px;          /* Reduced radius */
 }
 
 .pm .taskbarsvg {
   width: 100%;
   height: 20px;
   vertical-align: top;
+  border-radius: 12px;
+}
+
+.pm .taskbarsvg rect {
+  rx: 6;
+  ry: 6;
 }
 
 .pm .hidephases .taskbarsvg rect {
@@ -90,38 +145,52 @@
 }
 
 .pm .showphases .taskbarsvg rect.scheduler-delay-proportion {
-  fill: #80b1d3;
-  stroke: #6b94b0;
+  fill: #A5D6A7;
+  stroke: #81C784;
+  rx: 6;
+  ry: 6;
 }
 
 .pm .showphases .taskbarsvg rect.deserialization-time-proportion {
-  fill: #fb8072;
-  stroke: #d26b5f;
+  fill: #C8E6C9;
+  stroke: #A5D6A7;
+  rx: 6;
+  ry: 6;
 }
 
 .pm .showphases .taskbarsvg rect.shuffle-read-time-proportion {
-  fill: #fdb462;
-  stroke: #d39651;
+  fill: #81C784;
+  stroke: #66BB6A;
+  rx: 6;
+  ry: 6;
 }
 
 .pm .showphases .taskbarsvg rect.executor-runtime-proportion {
-  fill: #b3de69;
-  stroke: #95b957;
+  fill: #66BB6A;
+  stroke: #4CAF50;
+  rx: 6;
+  ry: 6;
 }
 
 .pm .showphases .taskbarsvg rect.shuffle-write-time-proportion {
-  fill: #ffed6f;
-  stroke: #d5c65c;
+  fill: #4CAF50;
+  stroke: #388E3C;
+  rx: 6;
+  ry: 6;
 }
 
 .pm .showphases .taskbarsvg rect.serialization-time-proportion {
-  fill: #bc80bd;
-  stroke: #9d6b9e;
+  fill: #8BC34A;
+  stroke: #689F38;
+  rx: 6;
+  ry: 6;
 }
 
 .pm .showphases .taskbarsvg rect.getting-result-time-proportion {
-  fill: #8dd3c7;
-  stroke: #75b0a6;
+  fill: #9CCC65;
+  stroke: #7CB342;
+  rx: 6;
+  ry: 6;
 }
 
 .pm .taskbardiv {
@@ -131,11 +200,150 @@
 
 .pm .timelinetoolbar {
   padding: 0 8px;
-  color: #444;
+  color: #1F1F1F;
   font-size: small;
 }
 
 .pm .timecheckboxspan {
   margin: 0 5px;
   float: right;
+  color: #1F1F1F;
+}
+
+/* Global timeline text color */
+.pm .timelinewrapper,
+.pm .timelinewrapper *,
+.pm .vis-timeline,
+.pm .vis-timeline * {
+  color: #747474;
+}
+
+/* Exception for failed items to keep white text on red background */
+.pm .timelinewrapper .vis-item.job.FAILED,
+.pm .timelinewrapper .vis-item.stage.FAILED,
+.pm .vis-item.job.FAILED,
+.pm .vis-item.stage.FAILED {
+  color: white !important;
+}
+
+/* Job and Stage Status Colors with higher specificity */
+.pm .timelinewrapper .vis-item.job.RUNNING,
+.pm .timelinewrapper .vis-item.stage.RUNNING,
+.pm .vis-item.job.RUNNING,
+.pm .vis-item.stage.RUNNING {
+  background-color: #7FCFFF !important;
+  border-radius: 6px !important;
+  /* border-width: 1px !important;
+  border-style: solid !important; */
+  height: 12px !important;
+  font-size: 10px !important;
+}
+
+.pm .timelinewrapper .vis-item.job.SUCCEEDED,
+.pm .timelinewrapper .vis-item.stage.SUCCEEDED,
+.pm .timelinewrapper .vis-item.job.COMPLETED,
+.pm .timelinewrapper .vis-item.stage.COMPLETED,
+.pm .vis-item.job.SUCCEEDED,
+.pm .vis-item.stage.SUCCEEDED,
+.pm .vis-item.job.COMPLETED,
+.pm .vis-item.stage.COMPLETED {
+  background-color: #6DD58C !important;
+  border-radius: 6px !important;
+  /* border-width: 1px !important;
+  border-style: solid !important; */
+  height: 12px !important;
+  font-size: 10px !important;
+}
+
+.pm .timelinewrapper .vis-item.job.FAILED,
+.pm .timelinewrapper .vis-item.stage.FAILED,
+.pm .vis-item.job.FAILED,
+.pm .vis-item.stage.FAILED {
+  background-color: #E57373 !important;
+  border-radius: 6px !important;
+  /* border-width: 1px !important;
+  border-style: solid !important; */
+  height: 12px !important;
+  font-size: 10px !important;
+}
+
+.pm .timelinewrapper .vis-item.job,
+.pm .timelinewrapper .vis-item.stage,
+.pm .vis-item.job,
+.pm .vis-item.stage {
+  border-radius: 6px !important;
+  height: 12px !important;
+  font-size: 10px !important;
+  text-align: center !important;
+  line-height: 12px !important;
+}
+
+/* Center alignment for all timeline items */
+.pm .vis-item {
+  border-radius: 12px;
+  font-size: smaller;
+  color: #1F1F1F;
+  text-align: center !important;
+  line-height: 12px !important;
+}
+
+/* Selected/Clicked state - darker shade */
+.pm .timelinewrapper .vis-item.vis-selected.job.RUNNING,
+.pm .timelinewrapper .vis-item.vis-selected.stage.RUNNING,
+.pm .vis-item.vis-selected.job.RUNNING,
+.pm .vis-item.vis-selected.stage.RUNNING {
+  background-color: #66B3E6 !important;
+}
+
+.pm .timelinewrapper .vis-item.vis-selected.job.SUCCEEDED,
+.pm .timelinewrapper .vis-item.vis-selected.stage.SUCCEEDED,
+.pm .timelinewrapper .vis-item.vis-selected.job.COMPLETED,
+.pm .timelinewrapper .vis-item.vis-selected.stage.COMPLETED,
+.pm .vis-item.vis-selected.job.SUCCEEDED,
+.pm .vis-item.vis-selected.stage.SUCCEEDED,
+.pm .vis-item.vis-selected.job.COMPLETED,
+.pm .vis-item.vis-selected.stage.COMPLETED {
+  background-color: #5BB573 !important;
+}
+
+/* Force text centering for all timeline items */
+.pm .vis-item .vis-item-content,
+.pm .timelinewrapper .vis-item .vis-item-content,
+.pm .vis-item.job .vis-item-content,
+.pm .vis-item.stage .vis-item-content {
+  text-align: center !important;
+  display: block !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Override vis-timeline positioning */
+.pm .vis-item,
+.pm .timelinewrapper .vis-item {
+  position: relative !important;
+}
+
+.pm .vis-item .vis-item-content,
+.pm .timelinewrapper .vis-item .vis-item-content {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  color: #1F1F1F !important;
+}
+
+.vscode-dark .pm .vis-timeline,
+.vscode-dark .pm .vis-panel.vis-center,
+.vscode-dark .pm .vis-panel.vis-top,
+.vscode-dark .pm .vis-panel.vis-bottom,
+.vscode-high-contrast .pm .vis-timeline,
+.vscode-high-contrast .pm .vis-panel.vis-center,
+.vscode-high-contrast .pm .vis-panel.vis-top,
+.vscode-high-contrast .pm .vis-panel.vis-bottom {
+  border-color: #747474;
 }

@@ -7,50 +7,79 @@ import createPlotlyComponent from 'react-plotly.js/factory';
 import { ErrorBoundary } from './error-boundary';
 const Plot = createPlotlyComponent(Plotly);
 
-const plotDefaultLayout: Partial<Plotly.Layout> = {
-  showlegend: true,
-  paper_bgcolor: '#FAFAFA',  // Same background for entire chart area including legend
-  plot_bgcolor: '#FAFAFA',   // Graph area background color
-  margin: {
-    t: 50, // top margin
-    l: 30, // left margin
-    r: 30, // right margin
-    b: 60 // bottom margin
-  },
-  xaxis: {
-    type: 'date',
-    showticklabels: true,  // Show time tick labels on x-axis
-    tickformat: '%H:%M:%S',  // Show only time (hours:minutes:seconds), not date
-    title: {
-      text: ''  // Remove x-axis title
-    }
-    // title: 'Time',
-  },
-  yaxis: {
-    fixedrange: true
-  },
-  dragmode: 'pan',
-  shapes: [],
-  legend: {
-    orientation: 'h',
-    x: 1,
-    xanchor: 'right',
-    y: 1.08,
-    yanchor: 'top',
-    // traceorder: 'normal',
-    font: {
-      family: 'sans-serif',
-      size: 12,
-      color: '#000'
-    },
-    itemsizing: 'trace',
-    tracegroupgap: 5,
-    itemclick: 'toggle',
-    itemdoubleclick: 'toggleothers'
-    // bgcolor: '#E2E2E2',
-    // bordercolor: '#FFFFFF',
-    // borderwidth: 2
+// Function to detect if dark mode is active
+const isDarkMode = (): boolean => {
+  // Check for system dark mode preference
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    return true;
   }
+  
+  // Check for JupyterLab dark theme
+  const jupyterElement = document.querySelector('[data-jp-theme-light="false"]');
+  if (jupyterElement) {
+    return true;
+  }
+  
+  // Check for VSCode dark theme
+  const vscodeElement = document.querySelector('.vscode-dark, .vscode-high-contrast');
+  if (vscodeElement) {
+    return true;
+  }
+  
+  return false;
+};
+
+const getPlotDefaultLayout = (): Partial<Plotly.Layout> => {
+  const darkMode = isDarkMode();
+  
+  return {
+    showlegend: true,
+    paper_bgcolor: darkMode ? '#303030' : '#FAFAFA', // Graph background
+    plot_bgcolor: darkMode ? '#303030' : '#FAFAFA',  // Plot area background
+    margin: {
+      t: 50,
+      l: 30,
+      r: 30,
+      b: 60
+    },
+    xaxis: {
+      type: 'date',
+      showticklabels: true,
+      tickformat: '%H:%M:%S.%L',
+      title: {
+        text: ''
+      },
+      tickfont: {
+        color: darkMode ? '#E1E3E1' : '#000' // Axis text color
+      },
+      gridcolor: darkMode ? 'rgba(225, 227, 225, 0.3)' : undefined // Translucent grid color in dark mode
+    },
+    yaxis: {
+      fixedrange: true,
+      tickfont: {
+        color: darkMode ? '#E1E3E1' : '#000' // Axis text color
+      },
+      gridcolor: darkMode ? 'rgba(225, 227, 225, 0.3)' : undefined // Translucent grid color in dark mode
+    },
+    dragmode: 'pan',
+    shapes: [],
+    legend: {
+      orientation: 'h',
+      x: 1,
+      xanchor: 'right',
+      y: 1.08,
+      yanchor: 'top',
+      font: {
+        family: 'sans-serif',
+        size: 12,
+        color: darkMode ? '#E1E3E1' : '#000' // Legend text color
+      },
+      itemsizing: 'trace',
+      tracegroupgap: 5,
+      itemclick: 'toggle',
+      itemdoubleclick: 'toggleothers'
+    }
+  };
 };
 
 const plotOptions = { displaylogo: false, scrollZoom: true };
@@ -60,9 +89,9 @@ const TaskChart = observer(() => {
   const taskChartStore = cell.taskChartStore;
 
   const [chartRefreshRevision, setRevision] = React.useState(1);
+  const [themeRevision, setThemeRevision] = React.useState(1);
 
   const data = React.useMemo(() => {
-    // Main chart traces - no legend
     const tasktrace: Plotly.Data = {
       x: taskChartStore.taskDataX,
       y: taskChartStore.taskDataY,
@@ -71,7 +100,7 @@ const TaskChart = observer(() => {
       line: {
         color: '#6DD58C',
         width: 2,
-        shape: 'hv'  // Step chart - horizontal then vertical
+        shape: 'hv'
       },
       fill: 'tozeroy',
       fillcolor: 'rgba(109, 213, 140, 0.3)',
@@ -87,14 +116,13 @@ const TaskChart = observer(() => {
       line: {
         color: '#6991D6',
         width: 2,
-        shape: 'hv'  // Step chart - horizontal then vertical
+        shape: 'hv'
       },
       name: 'Executor Cores',
       legendgroup: 'executors',
       showlegend: false
     };
     
-    // Legend-only traces with circular markers
     const taskLegend: Plotly.Data = {
       x: [null],
       y: [null],
@@ -127,10 +155,9 @@ const TaskChart = observer(() => {
     const jobtrace: Plotly.Data = {
       x: taskChartStore.jobDataX,
       y: taskChartStore.jobDataY,
-      text: taskChartStore.jobDataText as any, //this.jobDataText,
+      text: taskChartStore.jobDataText as any,
       type: 'scatter',
       mode: 'markers',
-      // name: 'Jobs',
       showlegend: false,
       marker: {
         symbol: 23,
@@ -150,8 +177,10 @@ const TaskChart = observer(() => {
   ]);
 
   const plotLayout: Partial<Plotly.Layout> = React.useMemo(() => {
+    const darkMode = isDarkMode();
+    
     return {
-      ...plotDefaultLayout,
+      ...getPlotDefaultLayout(),
       shapes: taskChartStore.jobDataX.map(job => {
         return {
           type: 'line',
@@ -179,13 +208,54 @@ const TaskChart = observer(() => {
           font: {
             family: 'Roboto',
             size: 12,
-            color: '#000'
+            color: darkMode ? '#E1E3E1' : '#000' // Annotation text color
           }
         }
       ],
       datarevision: chartRefreshRevision
     };
-  }, [taskChartStore.jobDataX, chartRefreshRevision]);
+  }, [taskChartStore.jobDataX, chartRefreshRevision, themeRevision]);
+
+  // Listen for theme changes
+  React.useEffect(() => {
+    const handleThemeChange = () => {
+      setThemeRevision(prev => prev + 1);
+    };
+
+    // Listen for system theme changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.addEventListener('change', handleThemeChange);
+
+    // Listen for DOM changes that might indicate theme changes
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && 
+            (mutation.attributeName === 'data-jp-theme-light' ||
+             mutation.attributeName === 'class')) {
+          handleThemeChange();
+        }
+      });
+    });
+
+    // Observe the document body for class changes (VSCode theme changes)
+    observer.observe(document.body, { 
+      attributes: true, 
+      attributeFilter: ['class', 'data-jp-theme-light'],
+      subtree: true 
+    });
+
+    // Observe the document element for JupyterLab theme changes
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-jp-theme-light'],
+      subtree: true
+    });
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleThemeChange);
+      observer.disconnect();
+    };
+  }, []);
 
   // Periodically refresh the chart by updating the revision
   React.useEffect(() => {
@@ -200,16 +270,8 @@ const TaskChart = observer(() => {
 
   return (
     <ErrorBoundary>
-      <div className="tabcontent" style={{ 
-        padding: '8px', 
-        backgroundColor: '#F0F4F9',
-        boxSizing: 'border-box'
-      }}>
-        <div style={{ 
-          backgroundColor: '#FAFAFA',
-          borderRadius: '4px',
-          height: '100%'
-        }}>
+      <div className="tabcontent">
+        <div className="tabcontent-inner">
           <Plot
             layout={plotLayout}
             data={data}

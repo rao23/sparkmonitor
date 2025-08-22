@@ -87,8 +87,10 @@ const Timeline = observer(() => {
   return (
     <ErrorBoundary>
       <div className="tabcontent">
-        <div className="timelinewrapper hidephases">
-          <div ref={timelineDiv}></div>
+        <div className="tabcontent-inner">
+          <div className="timelinewrapper hidephases">
+            <div ref={timelineDiv}></div>
+          </div>
         </div>
       </div>
     </ErrorBoundary>
