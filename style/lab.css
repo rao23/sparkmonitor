@@ -5,6 +5,15 @@
 @import url('./taskdetails.css');
 @import url('./timeline.css');
 
+/* Default light mode values for JupyterLab */
+:root {
+  --sparkmonitor-bg-primary: #FFFFFF;
+  --sparkmonitor-bg-secondary: #F0F4F9;
+  --sparkmonitor-bg-tertiary: #DDE3EA;
+  --sparkmonitor-bg-quaternary: #FAFAFA;
+  --sparkmonitor-title-bg: #E9EEF6;
+}
+
 .spark-monitor-cell-widget {
   margin-left: calc(
     var(--jp-cell-collapser-width) + var(--jp-cell-prompt-width)
@@ -23,4 +32,27 @@
 /* Ensure proper spacing between input and spark monitor */
 .spark-monitor-container + .jp-Cell-outputWrapper {
   margin-top: 5px;
+}
+
+/* JupyterLab dark theme support - using both theme-specific and prefers-color-scheme detection */
+@media (prefers-color-scheme: dark) {
+  /* This covers system dark mode when JupyterLab theme doesn't explicitly set variables */
+  :root {
+    --sparkmonitor-bg-primary: #000000; /* #FFFFFF becomes #000000 */
+    --sparkmonitor-bg-secondary: #444746; /* #F0F4F9 becomes #444746 */
+    --sparkmonitor-bg-tertiary: #303030; /* #DDE3EA becomes #303030 */
+    --sparkmonitor-bg-quaternary: #303030; /* #FAFAFA becomes #303030 */
+    --sparkmonitor-title-bg: #747775; /* Title bar becomes #747775 */
+  }
+}
+
+/* JupyterLab specific dark theme detection using CSS custom properties */
+[data-jp-theme-light="false"],
+.jp-Cell[data-jp-theme-light="false"],
+.jp-Notebook[data-jp-theme-light="false"] {
+  --sparkmonitor-bg-primary: #000000; /* #FFFFFF becomes #000000 */
+  --sparkmonitor-bg-secondary: #444746; /* #F0F4F9 becomes #444746 */
+  --sparkmonitor-bg-tertiary: #303030; /* #DDE3EA becomes #303030 */
+  --sparkmonitor-bg-quaternary: #303030; /* #FAFAFA becomes #303030 */
+  --sparkmonitor-title-bg: #747775; /* Title bar becomes #747775 */
 }

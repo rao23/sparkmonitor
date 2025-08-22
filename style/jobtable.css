@@ -23,9 +23,12 @@
 
 .pm th {
   /* background-color: var(--jp-layout-color2); */ /* Original */
-  background-color: #FAFAFA; /* Light gray background */
-  border-top: 1px solid #EEEEEE; /* Light gray border */
-  border-bottom: 2px solid #EEEEEE; /* Slightly thicker bottom border */
+  background-color: var(--sparkmonitor-bg-quaternary, #FAFAFA); /* Light gray background */
+  border-top: 1px solid #EEEEEE; /* Light mode border - same as others */
+  border-bottom: 2px solid #EEEEEE; /* Light mode border - thicker for separation */
+  border-left: none; /* No left border to avoid overlap */
+  border-right: none; /* No right border to avoid overlap */
+  color: inherit; /* Ensure default text color in light mode */
   font-weight: 500;
   white-space: nowrap;
   font-size: 13px;
@@ -33,6 +36,232 @@
   height: 15px; /* Increased height */
   line-height: 15px;
   padding: 8px 12px; /* Increased padding for better spacing */
+}
+
+.pm td {
+  background-color: var(--sparkmonitor-bg-primary, #ffffff);
+  border-top: none; /* No top border to avoid overlap with header */
+  border-bottom: 2px solid #EEEEEE; /* Light mode border - thicker for row separation */
+  border-left: none; /* No left border to avoid overlap */
+  border-right: none; /* No right border to avoid overlap */
+  color: inherit; /* Ensure default text color in light mode */
+  font-size: 12px;
+  font-weight: 400;
+}
+
+/* Ensure dropdown button cell has same background and borders as other cells */
+.pm td.tdstagebutton {
+  background-color: inherit;
+}
+
+.pm .tdstagebutton {
+  background-color: transparent;
+}
+
+/* Ensure all job table cells have consistent white background */
+.pm .jobrow > td {
+  background-color: var(--sparkmonitor-bg-primary, #ffffff) !important;
+  border-top: none; /* No top border to avoid overlap */
+  border-bottom: 2px solid #EEEEEE; /* Light mode border - thicker for row separation */
+  border-left: none; /* No left border to avoid overlap */
+  border-right: none; /* No right border to avoid overlap */
+  text-align: center;
+  vertical-align: middle;
+  height: 30px;
+  line-height: 30px;
+  padding: 8px 6px; /* Added padding for better spacing */
+}
+
+/* Dark mode support for job table */
+@media (prefers-color-scheme: dark) {
+  .pm th {
+    background-color: #303030; /* #FAFAFA becomes #303030 */
+    border-top: 1px solid #444746; /* Top border only */
+    border-bottom: 1px solid #444746; /* Bottom border only */
+    border-left: none; /* Remove left border */
+    border-right: none; /* Remove right border */
+    color: #E1E3E1; /* Text color for headers like "Jobs:" */
+  }
+  
+  .pm td {
+    background-color: #000000; /* #FFFFFF becomes #000000 */
+    border-top: 1px solid #444746; /* Top border only */
+    border-bottom: 1px solid #444746; /* Bottom border only */
+    border-left: none; /* Remove left border */
+    border-right: none; /* Remove right border */
+    color: #E1E3E1; /* Text color for table values */
+  }
+  
+  .pm .jobrow > td {
+    background-color: #000000 !important; /* #FFFFFF becomes #000000 */
+    border-top: 1px solid #444746; /* Top border only */
+    border-bottom: 1px solid #444746; /* Bottom border only */
+    border-left: none; /* Remove left border */
+    border-right: none; /* Remove right border */
+  }
+  
+  .pm .jobstagedatarow > td {
+    background-color: #444746; /* #F0F4F9 becomes #444746 */
+  }
+  
+  .pm .stagerow > td {
+    background-color: #000000 !important; /* #FFFFFF becomes #000000 */
+    border-top: 1px solid #444746; /* Top border only */
+    border-bottom: 1px solid #444746; /* Bottom border only */
+    border-left: none; /* Remove left border */
+    border-right: none; /* Remove right border */
+  }
+  
+  .pm .stagetable tr th {
+    background-color: #303030; /* #DDE3EA becomes #303030 */
+    border-top: 1px solid #444746; /* Top border only */
+    border-bottom: 1px solid #444746; /* Bottom border only */
+    border-left: none; /* Remove left border */
+    border-right: none; /* Remove right border */
+    color: #E1E3E1; /* Text color for stage table headers */
+  }
+  
+  .pm .cssprogress {
+    background: #303030; /* #DDE3EA becomes #303030 */
+  }
+  
+  /* Progress bar text color for dark mode */
+  .pm .cssprogress .data {
+    color: #E1E3E1; /* Progress text color like "64/64" */
+  }
+  
+  .pm .cssprogress-container .data {
+    color: #E1E3E1; /* Progress text color like "64/64" */
+  }
+  
+  /* Dropdown icon color for dark mode */
+  .pm .tdstageicon {
+    filter: brightness(0) saturate(100%) invert(87%) sepia(4%) saturate(309%) hue-rotate(75deg) brightness(98%) contrast(97%); /* Changes icon to #E1E3E1 */
+  }
+}
+
+/* Platform-specific dark theme support for job table */
+[data-jp-theme-light="false"] .pm th,
+.vscode-dark .pm th,
+.vscode-high-contrast .pm th {
+  background-color: #303030;
+  border: 1px solid #444746; /* Border on all sides with #444746 */
+  color: #E1E3E1;
+}
+
+[data-jp-theme-light="false"] .pm td,
+.vscode-dark .pm td,
+.vscode-high-contrast .pm td {
+  background-color: #000000;
+  border: 1px solid #444746; /* Border on all sides with #444746 */
+  color: #E1E3E1;
+}
+
+[data-jp-theme-light="false"] .pm .jobrow > td,
+.vscode-dark .pm .jobrow > td,
+.vscode-high-contrast .pm .jobrow > td {
+  background-color: #000000 !important;
+  border: 1px solid #444746; /* Border on all sides with #444746 */
+}
+
+[data-jp-theme-light="false"] .pm .stagerow > td,
+.vscode-dark .pm .stagerow > td,
+.vscode-high-contrast .pm .stagerow > td {
+  background-color: #000000 !important;
+  border: 1px solid #444746; /* Border on all sides with #444746 */
+}
+
+[data-jp-theme-light="false"] .pm .stagetable tr th,
+.vscode-dark .pm .stagetable tr th,
+.vscode-high-contrast .pm .stagetable tr th {
+  background-color: #303030;
+  border: 1px solid #444746; /* Border on all sides with #444746 */
+  color: #E1E3E1;
+}
+
+[data-jp-theme-light="false"] .pm .tdstageicon,
+.vscode-dark .pm .tdstageicon,
+.vscode-high-contrast .pm .tdstageicon {
+  filter: brightness(0) saturate(100%) invert(87%) sepia(4%) saturate(309%) hue-rotate(75deg) brightness(98%) contrast(97%);
+}
+
+/* Platform-specific dark theme support using CSS custom properties */
+[data-jp-theme-light="false"] .pm th,
+.vscode-dark .pm th,
+.vscode-high-contrast .pm th {
+  background-color: var(--sparkmonitor-bg-quaternary, #303030); /* #FAFAFA becomes #303030 */
+  border-top: 1px solid #444746; /* Top border only */
+  border-bottom: 1px solid #444746; /* Bottom border only */
+  border-left: none; /* Remove left border */
+  border-right: none; /* Remove right border */
+  color: #E1E3E1; /* Text color for headers like "Jobs:" */
+}
+
+[data-jp-theme-light="false"] .pm td,
+.vscode-dark .pm td,
+.vscode-high-contrast .pm td {
+  background-color: var(--sparkmonitor-bg-primary, #000000); /* #FFFFFF becomes #000000 */
+  border-top: 1px solid #444746; /* Top border only */
+  border-bottom: 1px solid #444746; /* Bottom border only */
+  border-left: none; /* Remove left border */
+  border-right: none; /* Remove right border */
+  color: #E1E3E1; /* Text color for table values */
+}
+
+[data-jp-theme-light="false"] .pm .jobrow > td,
+.vscode-dark .pm .jobrow > td,
+.vscode-high-contrast .pm .jobrow > td {
+  background-color: var(--sparkmonitor-bg-primary, #000000) !important; /* #FFFFFF becomes #000000 */
+  border-top: 1px solid #444746; /* Top border only */
+  border-bottom: 1px solid #444746; /* Bottom border only */
+  border-left: none; /* Remove left border */
+  border-right: none; /* Remove right border */
+}
+
+[data-jp-theme-light="false"] .pm .jobstagedatarow > td,
+.vscode-dark .pm .jobstagedatarow > td,
+.vscode-high-contrast .pm .jobstagedatarow > td {
+  background-color: var(--sparkmonitor-bg-secondary, #444746); /* #F0F4F9 becomes #444746 */
+}
+
+[data-jp-theme-light="false"] .pm .stagerow > td,
+.vscode-dark .pm .stagerow > td,
+.vscode-high-contrast .pm .stagerow > td {
+  background-color: var(--sparkmonitor-bg-primary, #000000) !important; /* #FFFFFF becomes #000000 */
+  border-top: 1px solid #444746; /* Top border only */
+  border-bottom: 1px solid #444746; /* Bottom border only */
+  border-left: none; /* Remove left border */
+  border-right: none; /* Remove right border */
+}
+
+[data-jp-theme-light="false"] .pm .stagetable tr th,
+.vscode-dark .pm .stagetable tr th,
+.vscode-high-contrast .pm .stagetable tr th {
+  background-color: var(--sparkmonitor-bg-tertiary, #303030); /* #DDE3EA becomes #303030 */
+  border-top: 1px solid #444746; /* Top border only */
+  border-bottom: 1px solid #444746; /* Bottom border only */
+  border-left: none; /* Remove left border */
+  border-right: none; /* Remove right border */
+  color: #E1E3E1; /* Text color for stage table headers */
+}
+
+[data-jp-theme-light="false"] .pm .cssprogress,
+.vscode-dark .pm .cssprogress,
+.vscode-high-contrast .pm .cssprogress {
+  background: var(--sparkmonitor-bg-tertiary, #303030); /* #DDE3EA becomes #303030 */
+}
+
+/* Progress bar text color for JupyterLab and VSCode dark modes */
+[data-jp-theme-light="false"] .pm .cssprogress .data,
+.vscode-dark .pm .cssprogress .data,
+.vscode-high-contrast .pm .cssprogress .data {
+  color: #E1E3E1;
+}
+
+[data-jp-theme-light="false"] .pm .cssprogress-container .data,
+.vscode-dark .pm .cssprogress-container .data,
+.vscode-high-contrast .pm .cssprogress-container .data {
+  color: #E1E3E1;
 }
 
 .pm td {
@@ -65,19 +294,21 @@
 }
 
 .pm .jobstagedatarow > td {
-  background-color: #F0F4F9;
+  background-color: var(--sparkmonitor-bg-secondary, #F0F4F9);
   padding: 8px;
 }
 
 /* Stage table rows - smaller version of job rows */
 .pm .stagerow > td {
-  background-color: #ffffff !important;
+  background-color: var(--sparkmonitor-bg-primary, #ffffff) !important;
+  border-top: none; /* No top border to avoid overlap */
+  border-bottom: 2px solid #EEEEEE; /* Light mode border - thicker for row separation */
+  border-left: none; /* No left border to avoid overlap */
+  border-right: none; /* No right border to avoid overlap */
   text-align: center;
   vertical-align: middle;
   height: 28px;
   line-height: 28px;
-  border-top: 1px solid #e8eaed;
-  border-bottom: 1px solid #e8eaed;
   padding: 6px 4px;
   font-size: 12px;
   font-weight: 400;
@@ -218,8 +449,11 @@ progress {
 }
 
 .pm .stagetable tr th {
-  background-color: #DDE3EA;
-  border: none;
+  background-color: var(--sparkmonitor-bg-tertiary, #DDE3EA);
+  border-top: 1px solid #EEEEEE; /* Light mode border - same as others */
+  border-bottom: 2px solid #EEEEEE; /* Light mode border - thicker for separation */
+  border-left: none; /* No left border to avoid overlap */
+  border-right: none; /* No right border to avoid overlap */
   font-weight: 500;
   font-size: 13px;
   font-family: 'Roboto', sans-serif;
@@ -237,7 +471,7 @@ progress {
 
 .pm .cssprogress {
   display: flex;
-  background: #DDE3EA; /* Light gray background */
+  background: var(--sparkmonitor-bg-tertiary, #DDE3EA); /* Light gray background */
   border-radius: 3px;
   flex: 1;
   height: 8px;
