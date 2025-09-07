@@ -222,21 +222,6 @@
   height: 100%;
 }
 
-/* Dark mode support for content areas */
-@media (prefers-color-scheme: dark) {
-  .pm .title {
-    background-color: #747775; /* Title bar becomes #747775 in dark mode */
-    color: #E1E3E1; /* Text color for Apache Spark title */
-  }
-  
-  .tabcontent {
-    background-color: var(--sparkmonitor-bg-secondary, #444746); /* #F0F4F9 becomes #444746 */
-  }
-  .tabcontent-inner {
-    background-color: var(--sparkmonitor-bg-quaternary, #303030); /* #FAFAFA becomes #303030 */
-  }
-}
-
 /* Platform-specific dark theme support using CSS custom properties */
 [data-jp-theme-light="false"] .pm .title,
 .vscode-dark .pm .title,
@@ -393,32 +378,6 @@ g.legend g.traces:hover .legendtext text {
   font-weight: normal !important;
   font-size: 12px !important;
   fill: #000 !important;
-}
-
-/* Dark mode styling for Plotly graphs */
-@media (prefers-color-scheme: dark) {
-  .js-plotly-plot .plot-container .plotly {
-    background-color: #303030 !important; /* Graph background */
-  }
-  
-  .js-plotly-plot .annotation-text {
-    fill: #E1E3E1 !important; /* Text color for annotations */
-  }
-  
-  .js-plotly-plot .xtick text,
-  .js-plotly-plot .ytick text,
-  .js-plotly-plot .g-xtitle text,
-  .js-plotly-plot .g-ytitle text,
-  .js-plotly-plot .g-gtitle text {
-    fill: #E1E3E1 !important; /* Axis text and title colors */
-  }
-  
-  .js-plotly-plot .xaxislayer-above .xtick line,
-  .js-plotly-plot .yaxislayer-above .ytick line,
-  .js-plotly-plot .xaxislayer-above .xgrid,
-  .js-plotly-plot .yaxislayer-above .ygrid {
-    stroke: #E1E3E1 !important; /* Axis lines and grid colors */
-  }
 }
 
 /* JupyterLab dark mode for Plotly */
