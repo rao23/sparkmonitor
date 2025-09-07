@@ -20,6 +20,16 @@ export default class JupyterLabSparkMonitor {
 
   /** Communication object with the kernel. */
   comm?: IComm;
+  
+  /** Retry mechanism for comm connection */
+  private commRetryTimer?: number;
+  private maxRetries = 10;
+  private retryCount = 0;
+  private retryInterval = 2000; // 2 seconds
+  private isCommReady = false;
+  private isDisposed = false;
+  private healthCheckInterval?: number;
+  private isCommCreationInProgress = false;
 
   constructor(
     private notebookPanel: NotebookPanel,
@@ -31,14 +41,33 @@ export default class JupyterLabSparkMonitor {
       ? (this.notebookPanel as any).session.kernel
       : this.notebookPanel.sessionContext.session?.kernel;
 
-    // Fixes Reloading the browser
-    this.startComm();
+    // Start comm with retry mechanism
+    this.startCommWithRetry();
 
-    // Fixes Restarting the Kernel
+    // Handle kernel status changes
     this.kernel?.statusChanged.connect((_, status) => {
+      console.log(`SparkMonitor: Kernel status changed to: ${status}`);
       if (status === 'starting') {
         this.currentCellTracker.cellReexecuted = false;
-        this.startComm();
+        this.resetCommConnection();
+        this.startCommWithRetry();
+      } else if (status === 'restarting') {
+        this.resetCommConnection();
+      } else if (status === 'idle') {
+        // If kernel is idle but comm isn't ready, try to establish comm
+        if (!this.isCommReady) {
+          this.startCommWithRetry();
+        }
+      }
+    });
+
+    // Handle session context changes (for cases where kernel might change)
+    this.notebookPanel.sessionContext.sessionChanged.connect(() => {
+      console.log('SparkMonitor: Session changed, updating kernel reference');
+      this.kernel = this.notebookPanel.sessionContext.session?.kernel || undefined;
+      this.resetCommConnection();
+      if (this.kernel) {
+        this.startCommWithRetry();
       }
     });
 
@@ -50,6 +79,103 @@ export default class JupyterLabSparkMonitor {
         });
       }
     });
+
+    // Periodic health check for comm connection
+    this.startCommHealthCheck();
+  }
+
+  private resetCommConnection() {
+    console.log('SparkMonitor: Resetting comm connection');
+    this.isCommReady = false;
+    this.retryCount = 0;
+    this.isCommCreationInProgress = false;
+    
+    if (this.commRetryTimer) {
+      clearTimeout(this.commRetryTimer);
+      this.commRetryTimer = undefined;
+    }
+    if (this.comm) {
+      try {
+        this.comm.close();
+      } catch (e) {
+        console.warn('SparkMonitor: Error closing existing comm:', e);
+      }
+      this.comm = undefined;
+    }
+  }
+
+  private startCommWithRetry() {
+    if (this.isDisposed) {
+      console.log('SparkMonitor: Extension disposed, skipping comm retry');
+      return;
+    }
+
+    if (this.isCommReady) {
+      console.log('SparkMonitor: Comm already ready, skipping retry');
+      return;
+    }
+
+    if (this.isCommCreationInProgress) {
+      console.log('SparkMonitor: Comm creation already in progress, skipping retry');
+      return;
+    }
+
+    if (this.retryCount >= this.maxRetries) {
+      console.error(`SparkMonitor: Failed to establish comm after ${this.maxRetries} attempts`);
+      return;
+    }
+
+    this.retryCount++;
+    this.isCommCreationInProgress = true;
+    console.log(`SparkMonitor: Attempting to start comm (attempt ${this.retryCount}/${this.maxRetries})`);
+
+    this.startComm()
+      .then((success) => {
+        this.isCommCreationInProgress = false;
+        if (success) {
+          console.log('SparkMonitor: Comm successfully established');
+          this.isCommReady = true;
+          this.retryCount = 0;
+        } else {
+          this.scheduleCommRetry();
+        }
+      })
+      .catch((error) => {
+        this.isCommCreationInProgress = false;
+        console.warn('SparkMonitor: Error starting comm:', error);
+        this.scheduleCommRetry();
+      });
+  }
+
+  private scheduleCommRetry() {
+    if (this.isDisposed) {
+      return;
+    }
+    
+    if (this.retryCount < this.maxRetries) {
+      console.log(`SparkMonitor: Scheduling comm retry in ${this.retryInterval}ms`);
+      this.commRetryTimer = window.setTimeout(() => {
+        this.startCommWithRetry();
+      }, this.retryInterval);
+    }
+  }
+
+  private startCommHealthCheck() {
+    // Check comm health every 30 seconds
+    this.healthCheckInterval = window.setInterval(() => {
+      if (this.isDisposed) {
+        if (this.healthCheckInterval) {
+          clearInterval(this.healthCheckInterval);
+          this.healthCheckInterval = undefined;
+        }
+        return;
+      }
+      
+      if (!this.isCommReady && this.kernel?.status === 'idle' && !this.isCommCreationInProgress) {
+        console.log('SparkMonitor: Health check detected comm is not ready, attempting to reconnect');
+        this.startCommWithRetry();
+      }
+    }, 30000);
   }
 
   createCellReactElements() {
@@ -86,44 +212,76 @@ export default class JupyterLabSparkMonitor {
             return insertIndex;
           };
 
-          const insertIndex = positionWidget();
+          // Initial positioning
+          let insertIndex = positionWidget();
+          layout.insertWidget(insertIndex, widget);
+          codeCell.update();
           
-          // If no output area found, it might be a new cell - use MutationObserver
-          if (insertIndex === layout.widgets.length && !codeCell.node.querySelector('.jp-Cell-outputWrapper, .jp-OutputArea')) {
-            // Temporarily insert at the end
-            layout.insertWidget(insertIndex, widget);
-            codeCell.update();
+          // Set up MutationObserver to monitor output area changes
+          const observer = new MutationObserver((mutations) => {
+            let needsRepositioning = false;
             
-            // Watch for output area creation and reposition
-            const observer = new MutationObserver((mutations) => {
-              for (const mutation of mutations) {
-                if (mutation.type === 'childList') {
-                  for (const node of Array.from(mutation.addedNodes)) {
-                    if (node instanceof Element && 
-                        (node.classList.contains('jp-Cell-outputWrapper') || 
-                         node.querySelector('.jp-OutputArea'))) {
-                      // Output area found, reposition the widget
-                      const newIndex = positionWidget();
-                      if (newIndex !== layout.widgets.indexOf(widget)) {
-                        layout.removeWidget(widget);
-                        layout.insertWidget(newIndex, widget);
-                        codeCell.update();
-                      }
-                      observer.disconnect();
-                      return;
-                    }
+            for (const mutation of mutations) {
+              if (mutation.type === 'childList') {
+                // Check if new output elements were added
+                for (const node of Array.from(mutation.addedNodes)) {
+                  if (node instanceof Element && 
+                      (node.classList.contains('jp-OutputArea-child') ||
+                        node.classList.contains('jp-OutputArea-output') ||
+                        node.querySelector('.jp-OutputArea-executeResult'))) {
+                    needsRepositioning = true;
+                    break;
                   }
                 }
+                
+                // Check if output wrapper was added/modified
+                if (mutation.target instanceof Element &&
+                    (mutation.target.classList.contains('jp-Cell-outputWrapper') ||
+                      mutation.target.classList.contains('jp-OutputArea'))) {
+                  needsRepositioning = true;
+                }
               }
-            });
+            }
             
-            observer.observe(codeCell.node, { childList: true, subtree: true });
-            setTimeout(() => observer.disconnect(), 10000);
-          } else {
-            // Output area exists, insert normally
-            layout.insertWidget(insertIndex, widget);
-            codeCell.update();
+            if (needsRepositioning) {
+              const currentIndex = layout.widgets.indexOf(widget);
+              const newIndex = positionWidget();
+              
+              // Only reposition if the widget is not already in the correct position
+              if (currentIndex !== newIndex && currentIndex !== -1) {
+                layout.removeWidget(widget);
+                layout.insertWidget(newIndex, widget);
+                codeCell.update();
+                console.log(`SparkMonitor: Repositioned widget from index ${currentIndex} to ${newIndex}`);
+              }
+            }
+          });
+          
+          // Monitor the entire cell for output changes
+          observer.observe(codeCell.node, { 
+            childList: true, 
+            subtree: true,
+            attributes: false 
+          });
+          
+          // Also monitor the output area specifically when it exists
+          const outputWrapper = codeCell.node.querySelector('.jp-Cell-outputWrapper');
+          if (outputWrapper) {
+            observer.observe(outputWrapper, {
+              childList: true,
+              subtree: true
+            });
           }
+          
+          // Store observer reference for cleanup
+          (widget as any)._sparkMonitorObserver = observer;
+          
+          // Clean up observer when widget is disposed
+          widget.disposed.connect(() => {
+            if ((widget as any)._sparkMonitorObserver) {
+              (widget as any)._sparkMonitorObserver.disconnect();
+            }
+          });
         }
       }
     };
@@ -151,26 +309,101 @@ export default class JupyterLabSparkMonitor {
     this.notebookStore.toggleHideAllDisplays();
   }
 
-  startComm() {
+  async startComm(): Promise<boolean> {
     console.log('SparkMonitor: Starting Comm with kernel.');
-    this.currentCellTracker.ready().then(() => {
-      this.comm =
-        'createComm' in (this.kernel || {})
-          ? this.kernel?.createComm('SparkMonitor')
-          : (this.kernel as any).connectToComm('SparkMonitor');
-      if (!this.comm) {
-        console.warn('SparkMonitor: Unable to connect to comm');
-        return;
+    
+    if (!this.kernel) {
+      console.warn('SparkMonitor: No kernel available');
+      return false;
+    }
+
+    // Check if kernel is in a valid state for comm creation
+    if (this.kernel.status === 'starting' || this.kernel.status === 'restarting' || this.kernel.status === 'dead') {
+      console.warn(`SparkMonitor: Kernel not in valid state for comm (status: ${this.kernel.status})`);
+      return false;
+    }
+
+    try {
+      await this.currentCellTracker.ready();
+      
+      // Try to create comm using the appropriate method based on kernel version
+      let comm: IComm | undefined;
+      
+      if ('createComm' in this.kernel) {
+        // Newer JupyterLab versions
+        comm = this.kernel.createComm('SparkMonitor');
+      } else if ('connectToComm' in this.kernel) {
+        // Older JupyterLab versions
+        comm = (this.kernel as any).connectToComm('SparkMonitor');
+      } else {
+        console.warn('SparkMonitor: Kernel does not support comm creation');
+        return false;
       }
-      this.comm.open({ msgtype: 'openfromfrontend' });
+          
+      if (!comm) {
+        console.warn('SparkMonitor: Unable to create comm');
+        return false;
+      }
+
+      this.comm = comm;
+
+      // Set up event handlers before opening
       this.comm.onMsg = message => {
         this.handleMessage(message);
       };
+      
       this.comm.onClose = message => {
-        // noop
+        console.log('SparkMonitor: Comm closed, marking as not ready');
+        this.isCommReady = false;
+        this.isCommCreationInProgress = false;
+        // Attempt to reconnect after a short delay if not disposed
+        if (!this.isDisposed) {
+          setTimeout(() => {
+            if (!this.isCommReady && !this.isDisposed) {
+              this.startCommWithRetry();
+            }
+          }, 1000);
+        }
       };
-      console.log('SparkMonitor: Connection with comms established');
-    });
+
+      // Open the comm with a timeout
+      return new Promise<boolean>((resolve) => {
+        let isResolved = false;
+        
+        // Set a timeout to avoid hanging indefinitely
+        const timeoutId = setTimeout(() => {
+          if (!isResolved) {
+            isResolved = true;
+            console.warn('SparkMonitor: Comm open timeout');
+            resolve(false);
+          }
+        }, 5000); // 5 second timeout
+        
+        try {
+          this.comm!.open({ msgtype: 'openfromfrontend' });
+          
+          // Consider the comm successfully opened immediately after calling open
+          // The actual connection will be verified through message handling
+          if (!isResolved) {
+            isResolved = true;
+            clearTimeout(timeoutId);
+            console.log('SparkMonitor: Connection with comms established');
+            resolve(true);
+          }
+        } catch (error) {
+          if (!isResolved) {
+            isResolved = true;
+            clearTimeout(timeoutId);
+            console.error('SparkMonitor: Error opening comm:', error);
+            resolve(false);
+          }
+        }
+      });
+      
+    } catch (error) {
+      console.error('SparkMonitor: Error establishing comm:', error);
+      return false;
+    }
   }
 
   onSparkJobStart(data: any) {
@@ -245,5 +478,30 @@ export default class JupyterLabSparkMonitor {
           break;
       }
     }
+  }
+
+  // Public method to manually trigger comm retry (useful for debugging)
+  public retryCommConnection() {
+    console.log('SparkMonitor: Manual comm retry triggered');
+    this.resetCommConnection();
+    this.startCommWithRetry();
+  }
+
+  // Cleanup method
+  dispose() {
+    console.log('SparkMonitor: Disposing extension');
+    this.isDisposed = true;
+    
+    if (this.commRetryTimer) {
+      clearTimeout(this.commRetryTimer);
+      this.commRetryTimer = undefined;
+    }
+    
+    if (this.healthCheckInterval) {
+      clearInterval(this.healthCheckInterval);
+      this.healthCheckInterval = undefined;
+    }
+    
+    this.resetCommConnection();
   }
 }
