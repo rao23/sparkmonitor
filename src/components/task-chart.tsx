@@ -9,11 +9,6 @@ const Plot = createPlotlyComponent(Plotly);
 
 // Function to detect if dark mode is active
 const isDarkMode = (): boolean => {
-  // Check for system dark mode preference
-  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    return true;
-  }
-  
   // Check for JupyterLab dark theme
   const jupyterElement = document.querySelector('[data-jp-theme-light="false"]');
   if (jupyterElement) {
@@ -52,7 +47,9 @@ const getPlotDefaultLayout = (): Partial<Plotly.Layout> => {
       tickfont: {
         color: darkMode ? '#E1E3E1' : '#000' // Axis text color
       },
-      gridcolor: darkMode ? 'rgba(225, 227, 225, 0.3)' : undefined // Translucent grid color in dark mode
+      gridcolor: darkMode ? 'rgba(225, 227, 225, 0.3)' : undefined, // Translucent grid color in dark mode
+      fixedrange: false,
+      autorange: true
     },
     yaxis: {
       fixedrange: true,
@@ -181,6 +178,12 @@ const TaskChart = observer(() => {
     
     return {
       ...getPlotDefaultLayout(),
+      xaxis: {
+        ...getPlotDefaultLayout().xaxis,
+        range: taskChartStore.taskDataX.length > 0 ? 
+          [taskChartStore.taskDataX[0], taskChartStore.taskDataX[taskChartStore.taskDataX.length - 1]] : 
+          undefined
+      },
       shapes: taskChartStore.jobDataX.map(job => {
         return {
           type: 'line',
@@ -212,7 +215,8 @@ const TaskChart = observer(() => {
           }
         }
       ],
-      datarevision: chartRefreshRevision
+      datarevision: chartRefreshRevision,
+      uirevision: 'preserve_zoom'
     };
   }, [taskChartStore.jobDataX, chartRefreshRevision, themeRevision]);
 
