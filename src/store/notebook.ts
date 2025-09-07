@@ -20,6 +20,12 @@ export class NotebookStore {
     makeAutoObservable(this);
   }
 
+  resetNotebook() {
+    for (const cellId in this.cells) {
+      this.cells[cellId].reset();
+    }
+  }
+
   resetCell(cellId:string) {
     const cell = this.cells[cellId];
     if (cell) {
@@ -80,7 +86,7 @@ export class NotebookStore {
     job.status = data.status;
     job.cellId = cellId;
     const jobName = String(data.name).split(' ')[0];
-    job.name = jobName.charAt(0).toUpperCase() + jobName.slice(1).toLowerCase();
+    job.name = jobName;
     job.startTime = new Date(data.submissionTime);
     job.stageIds = data.stageIds;
     job.numStages = data.stageIds.length;
