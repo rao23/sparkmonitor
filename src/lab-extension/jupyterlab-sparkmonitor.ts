@@ -212,76 +212,44 @@ export default class JupyterLabSparkMonitor {
             return insertIndex;
           };
 
-          // Initial positioning
-          let insertIndex = positionWidget();
-          layout.insertWidget(insertIndex, widget);
-          codeCell.update();
+          const insertIndex = positionWidget();
           
-          // Set up MutationObserver to monitor output area changes
-          const observer = new MutationObserver((mutations) => {
-            let needsRepositioning = false;
+          // If no output area found, it might be a new cell - use MutationObserver
+          if (insertIndex === layout.widgets.length && !codeCell.node.querySelector('.jp-Cell-outputWrapper, .jp-OutputArea')) {
+            // Temporarily insert at the end
+            layout.insertWidget(insertIndex, widget);
+            codeCell.update();
             
-            for (const mutation of mutations) {
-              if (mutation.type === 'childList') {
-                // Check if new output elements were added
-                for (const node of Array.from(mutation.addedNodes)) {
-                  if (node instanceof Element && 
-                      (node.classList.contains('jp-OutputArea-child') ||
-                        node.classList.contains('jp-OutputArea-output') ||
-                        node.querySelector('.jp-OutputArea-executeResult'))) {
-                    needsRepositioning = true;
-                    break;
+            // Watch for output area creation and reposition
+            const observer = new MutationObserver((mutations) => {
+              for (const mutation of mutations) {
+                if (mutation.type === 'childList') {
+                  for (const node of Array.from(mutation.addedNodes)) {
+                    if (node instanceof Element && 
+                        (node.classList.contains('jp-Cell-outputWrapper') || 
+                         node.querySelector('.jp-OutputArea'))) {
+                      // Output area found, reposition the widget
+                      const newIndex = positionWidget();
+                      if (newIndex !== layout.widgets.indexOf(widget)) {
+                        layout.removeWidget(widget);
+                        layout.insertWidget(newIndex, widget);
+                        codeCell.update();
+                      }
+                      observer.disconnect();
+                      return;
+                    }
                   }
                 }
-                
-                // Check if output wrapper was added/modified
-                if (mutation.target instanceof Element &&
-                    (mutation.target.classList.contains('jp-Cell-outputWrapper') ||
-                      mutation.target.classList.contains('jp-OutputArea'))) {
-                  needsRepositioning = true;
-                }
               }
-            }
-            
-            if (needsRepositioning) {
-              const currentIndex = layout.widgets.indexOf(widget);
-              const newIndex = positionWidget();
-              
-              // Only reposition if the widget is not already in the correct position
-              if (currentIndex !== newIndex && currentIndex !== -1) {
-                layout.removeWidget(widget);
-                layout.insertWidget(newIndex, widget);
-                codeCell.update();
-                console.log(`SparkMonitor: Repositioned widget from index ${currentIndex} to ${newIndex}`);
-              }
-            }
-          });
-          
-          // Monitor the entire cell for output changes
-          observer.observe(codeCell.node, { 
-            childList: true, 
-            subtree: true,
-            attributes: false 
-          });
-          
-          // Also monitor the output area specifically when it exists
-          const outputWrapper = codeCell.node.querySelector('.jp-Cell-outputWrapper');
-          if (outputWrapper) {
-            observer.observe(outputWrapper, {
-              childList: true,
-              subtree: true
             });
+            
+            observer.observe(codeCell.node, { childList: true, subtree: true });
+            setTimeout(() => observer.disconnect(), 10000);
+          } else {
+            // Output area exists, insert normally
+            layout.insertWidget(insertIndex, widget);
+            codeCell.update();
           }
-          
-          // Store observer reference for cleanup
-          (widget as any)._sparkMonitorObserver = observer;
-          
-          // Clean up observer when widget is disposed
-          widget.disposed.connect(() => {
-            if ((widget as any)._sparkMonitorObserver) {
-              (widget as any)._sparkMonitorObserver.disconnect();
-            }
-          });
         }
       }
     };
