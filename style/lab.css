@@ -18,6 +18,11 @@
   margin-left: calc(
     var(--jp-cell-collapser-width) + var(--jp-cell-prompt-width)
   );
+  /* Ensure the widget appears first in execution order */
+  order: -10;
+  /* Add some spacing */
+  margin-top: 4px;
+  margin-bottom: 4px;
 }
 
 /* New container styling for DOM-based insertion */
@@ -27,11 +32,30 @@
   margin-left: calc(
     var(--jp-cell-collapser-width) + var(--jp-cell-prompt-width)
   );
+  /* Ensure it appears first in execution order */
+  order: -10;
 }
 
-/* Ensure proper spacing between input and spark monitor */
+/* Ensure proper spacing between spark monitor and output */
+.spark-monitor-cell-widget + .jp-Cell-outputWrapper,
 .spark-monitor-container + .jp-Cell-outputWrapper {
   margin-top: 5px;
+}
+
+/* Ensure input wrapper has proper order */
+.jp-Cell-inputWrapper {
+  order: -20;
+}
+
+/* Ensure output wrapper appears after spark monitor */
+.jp-Cell-outputWrapper {
+  order: 1;
+}
+
+/* Force flex display on code cells to respect ordering */
+.jp-CodeCell {
+  display: flex;
+  flex-direction: column;
 }
 
 /* JupyterLab specific dark theme detection using CSS custom properties */
