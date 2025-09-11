@@ -178,6 +178,85 @@ export default class JupyterLabSparkMonitor {
     }, 30000);
   }
 
+  /**
+   * Sets up a MutationObserver to remove Spark progress logs and empty outputs
+   * from the cell's output area and its underlying model.
+   *
+   * @param codeCell - The code cell widget
+   */
+  setupSparkLogAndEmptyOutputObserver(codeCell: any) {
+    const widgetPresent = !!codeCell.node.querySelector('.spark-monitor-cell-widget');
+    if (!widgetPresent) return;
+
+    const outputWrapper = codeCell.node.querySelector('.jp-Cell-outputWrapper');
+    if (!outputWrapper) return;
+
+    // Reference to the output area model (if available)
+    const outputAreaModel = codeCell.outputArea?.model;
+
+    // Helper to remove Spark logs and empty outputs
+    const scrubOutputs = () => {
+      // Remove Spark log outputs and empty outputs from DOM and model
+      const outputAreas = outputWrapper.querySelectorAll('.jp-OutputArea-output');
+      outputAreas.forEach((outputArea: { textContent: string; remove: () => void; }, idx: any) => {
+        const outputText = outputArea.textContent || '';
+        // Remove if Spark log OR if empty (no text at all, including whitespace)
+        if (
+          /Spark.*Progress|Stage \d+|Task \d+/.test(outputText) ||
+          outputText.trim() === ''
+        ) {
+          // Remove DOM node
+          outputArea.remove();
+          // Remove from model (if available)
+          if (outputAreaModel) {
+            // Loop backwards to avoid index shift when removing
+            for (let i = outputAreaModel.length - 1; i >= 0; i--) {
+              const output = outputAreaModel.get(i);
+              let isSparkLog = false;
+              let isEmpty = false;
+              if (output.output_type === 'stream' && typeof output.text === 'string') {
+                isSparkLog = /Spark.*Progress|Stage \d+|Task \d+/.test(output.text);
+                isEmpty = output.text.trim() === '';
+              } else if (
+                (output.output_type === 'execute_result' || output.output_type === 'display_data') &&
+                typeof output.data === 'object'
+              ) {
+                // Check all data MIME types for empty string
+                isEmpty = Object.values(output.data).every(val =>
+                  (typeof val === 'string' ? val.trim() === '' : false)
+                );
+              }
+              if (isSparkLog || isEmpty) {
+                outputAreaModel.remove(i);
+              }
+            }
+          }
+        }
+      });
+      // If output area model is now empty, hide the output wrapper. Otherwise, ensure it's visible.
+      if (outputAreaModel && outputWrapper) {
+        if (outputAreaModel.length === 0) {
+          outputWrapper.classList.add('sm-hide-output');
+        } else if (outputWrapper) {
+          outputWrapper.classList.remove('sm-hide-output');
+        }
+      }
+    };
+
+    // Initial clean-up
+    scrubOutputs();
+
+    // Set up the MutationObserver to watch for new output nodes
+    const observer = new MutationObserver((_mutations) => {
+      scrubOutputs();
+    });
+
+    observer.observe(outputWrapper, { childList: true, subtree: true });
+
+    // Return observer for optional clean-up if cell/widget is destroyed
+    return observer;
+}
+
   createCellReactElements() {
     const createElementIfNotExists = (cellModel: ICellModel) => {
       if (cellModel.type === 'code') {
@@ -186,7 +265,6 @@ export default class JupyterLabSparkMonitor {
         );
         if (codeCell && !codeCell.node.querySelector('.sparkMonitorCellRoot') && 
             !codeCell.node.querySelector('.spark-monitor-cell-widget')) {
-          console.log('SparkMonitor: Creating widget for cell', cellModel.id);
           const widget = ReactWidget.create(
             React.createElement(CellWidget, {
               notebookId: this.notebookPanel.id,
@@ -231,7 +309,6 @@ export default class JupyterLabSparkMonitor {
               layout.removeWidget(widget);
               layout.insertWidget(correctIndex, widget);
               codeCell.update();
-              console.log(`SparkMonitor: Repositioned widget from index ${currentIndex} to ${correctIndex}`);
             }
           };
 
@@ -274,7 +351,10 @@ export default class JupyterLabSparkMonitor {
               }, 10);
             }
           });
-          
+
+          // Set up observer to hide Spark logs in output area
+          this.setupSparkLogAndEmptyOutputObserver(codeCell);
+
           // Monitor the entire cell for any changes
           observer.observe(codeCell.node, { 
             childList: true, 
