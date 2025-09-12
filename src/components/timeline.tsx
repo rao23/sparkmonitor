@@ -80,6 +80,9 @@ const Timeline = observer(() => {
       timelineGroups,
       timelineOptions
     );
+    // timeline.on('rangechanged', function () {
+    //   timeline.redraw();
+    // });
     return () => {
       timeline.destroy();
     };
