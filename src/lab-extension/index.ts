@@ -5,8 +5,7 @@
  */
 
 import { INotebookTracker, NotebookTracker } from '@jupyterlab/notebook';
-import { IMainMenu, MainMenu } from '@jupyterlab/mainmenu';
-import { Menu } from '@lumino/widgets';
+import { IMainMenu } from '@jupyterlab/mainmenu';
 import SparkMonitor from './jupyterlab-sparkmonitor';
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { store } from '../store';
@@ -20,7 +19,6 @@ const extension = {
   activate(
     app: JupyterFrontEnd,
     notebooks: NotebookTracker,
-    mainMenu: MainMenu
   ) {
     let monitor: SparkMonitor;
     console.log('JupyterLab SparkMonitor is activated!');
@@ -53,30 +51,6 @@ const extension = {
         monitor.startComm();
       }
     });
-
-    const commandID = 'toggle-monitor';
-    let toggled = false;
-
-    app.commands.addCommand(commandID, {
-      label: 'Hide Spark Monitoring',
-      isEnabled: () => true,
-      isVisible: () => true,
-      isToggled: () => toggled,
-      execute: () => {
-        console.log(`Executed ${commandID}`);
-        toggled = !toggled;
-        monitor?.toggleAll();
-      }
-    });
-
-    const menu = new Menu({ commands: app.commands });
-    menu.title.label = 'Spark';
-    menu.addItem({
-      command: commandID,
-      args: {}
-    });
-
-    mainMenu.addMenu(menu, false, { rank: 40 });
   }
 };
 
