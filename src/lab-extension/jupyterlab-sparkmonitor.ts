@@ -31,6 +31,9 @@ export default class JupyterLabSparkMonitor {
   private healthCheckInterval?: number;
   private isCommCreationInProgress = false;
 
+  // Map of cellId to its widget instance for easy access and management
+  private cellWidgets = new Map<string, any>();
+
   constructor(
     private notebookPanel: NotebookPanel,
     private notebookStore: NotebookStore
@@ -43,6 +46,31 @@ export default class JupyterLabSparkMonitor {
 
     // Start comm with retry mechanism
     this.startCommWithRetry();
+
+    // Handle session context changes (for cases where kernel might change)
+    this.notebookPanel.sessionContext.sessionChanged.connect(() => {
+      console.log('SparkMonitor: Session changed, updating kernel reference and refreshing widgets');
+      this.kernel = this.notebookPanel.sessionContext.session?.kernel || undefined;
+      this.resetCommConnection();
+      
+      // Clear and recreate all cell widgets to ensure they connect to new kernel
+      this.refreshAllCellWidgets();
+      
+      if (this.kernel) {
+        this.startCommWithRetry();
+      }
+    });
+
+    // Also handle kernel changes within the same session
+    this.notebookPanel.sessionContext.kernelChanged.connect(() => {
+      console.log('SparkMonitor: Kernel changed, refreshing widgets');
+      this.kernel = this.notebookPanel.sessionContext.session?.kernel || undefined;
+      this.resetCommConnection();
+      this.refreshAllCellWidgets();
+      if (this.kernel) {
+        this.startCommWithRetry();
+      }
+    });
 
     // Handle kernel status changes
     this.kernel?.statusChanged.connect((_, status) => {
@@ -84,6 +112,9 @@ export default class JupyterLabSparkMonitor {
     this.startCommHealthCheck();
   }
 
+  private createElementIfNotExists?: (cellModel: ICellModel) => void;
+
+  // Reset method that also clears notebook store
   private resetCommConnection() {
     console.log('SparkMonitor: Resetting comm connection');
     this.isCommReady = false;
@@ -102,6 +133,15 @@ export default class JupyterLabSparkMonitor {
       }
       this.comm = undefined;
     }
+    
+    // Reset cell execution counter so new executions are properly tracked
+    this.cellExecCountSinceSparkJobStart = 0;
+  }
+
+  // Public method to force refresh widgets (useful for debugging)
+  public refreshWidgets() {
+    console.log('SparkMonitor: Manual widget refresh triggered');
+    this.refreshAllCellWidgets();
   }
 
   private startCommWithRetry() {
@@ -184,7 +224,7 @@ export default class JupyterLabSparkMonitor {
    *
    * @param codeCell - The code cell widget
    */
-  setupSparkLogAndEmptyOutputObserver(codeCell: any) {
+  private setupSparkLogAndEmptyOutputObserver(codeCell: any) {
     const widgetPresent = !!codeCell.node.querySelector('.spark-monitor-cell-widget');
     if (!widgetPresent) return;
 
@@ -255,7 +295,36 @@ export default class JupyterLabSparkMonitor {
 
     // Return observer for optional clean-up if cell/widget is destroyed
     return observer;
-}
+  }
+
+  private refreshAllCellWidgets() {
+    console.log('SparkMonitor: Refreshing all cell widgets');
+    
+    // Clear all existing widgets and their data
+    this.cellWidgets.forEach((widget, cellId) => {
+      try {
+        if (widget && !widget.isDisposed) {
+          // Dispose the widget which will trigger cleanup
+          widget.dispose();
+        }
+        // Clear cell data from store
+        this.notebookStore.onCellExecutedAgain(cellId);
+      } catch (error) {
+        console.warn(`SparkMonitor: Error disposing widget for cell ${cellId}:`, error);
+      }
+    });
+    
+    this.cellWidgets.clear();
+    
+    // Recreate widgets for all code cells
+    const cells = this.notebookPanel.context.model.cells;
+    for (let i = 0; i < cells.length; i++) {
+      const cellModel = cells.get(i);
+      if (cellModel.type === 'code' && this.createElementIfNotExists) {
+        this.createElementIfNotExists(cellModel);
+      }
+    }
+  }
 
   createCellReactElements() {
     const createElementIfNotExists = (cellModel: ICellModel) => {
@@ -263,8 +332,16 @@ export default class JupyterLabSparkMonitor {
         const codeCell = this.notebookPanel.content.widgets.find(
           widget => widget.model === cellModel
         );
+
+        // Check if widget already exists and is still valid
+        const existingWidget = this.cellWidgets.get(cellModel.id);
+        if (existingWidget && !existingWidget.isDisposed) {
+          return; // Widget already exists and is valid
+        }
+
         if (codeCell && !codeCell.node.querySelector('.sparkMonitorCellRoot') && 
             !codeCell.node.querySelector('.spark-monitor-cell-widget')) {
+          console.log('SparkMonitor: Creating widget for cell', cellModel.id);
           const widget = ReactWidget.create(
             React.createElement(CellWidget, {
               notebookId: this.notebookPanel.id,
@@ -272,6 +349,9 @@ export default class JupyterLabSparkMonitor {
             })
           );
           widget.addClass('spark-monitor-cell-widget');
+
+          // Track the widget for this cell
+          this.cellWidgets.set(cellModel.id, widget);
 
           const layout = codeCell.layout as PanelLayout;
           
@@ -309,6 +389,7 @@ export default class JupyterLabSparkMonitor {
               layout.removeWidget(widget);
               layout.insertWidget(correctIndex, widget);
               codeCell.update();
+              console.log(`SparkMonitor: Repositioned widget from index ${currentIndex} to ${correctIndex}`);
             }
           };
 
@@ -370,6 +451,9 @@ export default class JupyterLabSparkMonitor {
             if ((widget as any)._sparkMonitorObserver) {
               (widget as any)._sparkMonitorObserver.disconnect();
             }
+            // Remove from tracking
+            this.cellWidgets.delete(cellModel.id);
+            console.log(`SparkMonitor: Widget disposed for cell ${cellModel.id}`);
           });
           
           // Also ensure position is correct after a brief delay (for initial setup)
@@ -380,17 +464,28 @@ export default class JupyterLabSparkMonitor {
       }
     };
 
+    // Store reference to the function for external use
+    this.createElementIfNotExists = createElementIfNotExists;
+
     const cells = this.notebookPanel.context.model.cells;
 
     // Ensure new cells created have a monitoring display
     cells.changed.connect((cells, changed) => {
       if (changed.type === 'add') {
-        // Only handle newly added cells
         changed.newValues.forEach(cellModel => {
           createElementIfNotExists(cellModel);
         });
+      } else if (changed.type === 'remove') {
+        // Clean up removed cells
+        changed.oldValues.forEach(cellModel => {
+          const widget = this.cellWidgets.get(cellModel.id);
+          if (widget && !widget.isDisposed) {
+            widget.dispose();
+          }
+          this.cellWidgets.delete(cellModel.id);
+          this.notebookStore.onCellRemoved(cellModel.id);
+        });
       }
-      // Don't handle other change types to avoid duplicates
     });
 
     // Do it the first time
@@ -581,7 +676,7 @@ export default class JupyterLabSparkMonitor {
     this.startCommWithRetry();
   }
 
-  // Cleanup method
+  // Enhanced cleanup method
   dispose() {
     console.log('SparkMonitor: Disposing extension');
     this.isDisposed = true;
@@ -595,6 +690,18 @@ export default class JupyterLabSparkMonitor {
       clearInterval(this.healthCheckInterval);
       this.healthCheckInterval = undefined;
     }
+    
+    // Dispose all tracked widgets
+    this.cellWidgets.forEach((widget) => {
+      try {
+        if (widget && !widget.isDisposed) {
+          widget.dispose();
+        }
+      } catch (error) {
+        console.warn('SparkMonitor: Error disposing widget during cleanup:', error);
+      }
+    });
+    this.cellWidgets.clear();
     
     this.resetCommConnection();
   }

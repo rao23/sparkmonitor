@@ -182,6 +182,9 @@ def load_ipython_extension(ipython):
     logger.setLevel(logging.ERROR)
     logger.propagate = True
 
+    # Configure Spark logging to suppress progress logs
+    configure_spark_logging()
+
     if ipykernel_imported:
         if not isinstance(ipython, zmqshell.ZMQInteractiveShell):
             logger.warn(
@@ -269,3 +272,20 @@ def get_spark_scala_version():
     cmd = "pyspark --version 2>&1 | grep -m 1  -Eo '[0-9]*[.][0-9]*[.][0-9]*[,]' | sed 's/,$//'"
     version = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8")
     return version.stdout.strip()
+
+def configure_spark_logging():
+    """Configure Spark and PySpark logging to suppress progress logs"""
+    import logging
+    
+    # Suppress PySpark progress logs
+    logging.getLogger("py4j").setLevel(logging.WARN)
+    logging.getLogger("pyspark").setLevel(logging.WARN)
+    logging.getLogger("pyspark.sql").setLevel(logging.WARN)
+    
+    # Set Java system properties to suppress Spark console progress
+    try:
+        import os
+        os.environ['SPARK_LOG_LEVEL'] = 'WARN'
+        # This will be picked up when SparkContext is created
+    except Exception as e:
+        logger.debug(f"Could not set Spark log level: {e}")

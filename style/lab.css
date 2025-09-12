@@ -68,3 +68,7 @@
   --sparkmonitor-bg-quaternary: #303030; /* #FAFAFA becomes #303030 */
   --sparkmonitor-title-bg: #747775; /* Title bar becomes #747775 */
 }
+
+.sm-hide-output {
+  display: none !important;
+}

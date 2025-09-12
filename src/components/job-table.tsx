@@ -99,7 +99,7 @@ const JobItem = observer((props: { jobId: string }) => {
           {/* {job.numSkippedStages > 0 ? `(${job.numSkippedStages} skipped)` : ''}
           {job.numActiveStages > 0 ? `(${job.numActiveStages} active)` : ''} */}
         </td>
-        <td className="tdtasks">                 
+        <td className="tdtasks">
           <ProgressBar
             total={job.numTasks}
             running={job.numActiveTasks}
