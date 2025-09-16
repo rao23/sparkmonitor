@@ -89,9 +89,13 @@ const TaskChart = observer(() => {
   const [themeRevision, setThemeRevision] = React.useState(1);
 
   const data = React.useMemo(() => {
-    const tasktrace: Plotly.Data = {
+    // Running tasks trace (tasks up to executor cores limit) - Green
+    const runningtaskstrace: Plotly.Data = {
       x: taskChartStore.taskDataX,
-      y: taskChartStore.taskDataY,
+      y: taskChartStore.taskDataY.map((numTasks, index) => {
+        const numCores = taskChartStore.executorDataY[index] || 0;
+        return Math.min(numTasks, numCores); // Cap at executor cores
+      }),
       type: 'scatter',
       mode: 'lines',
       line: {
@@ -101,10 +105,90 @@ const TaskChart = observer(() => {
       },
       fill: 'tozeroy',
       fillcolor: 'rgba(109, 213, 140, 0.3)',
-      name: 'Active Tasks',
-      legendgroup: 'tasks',
+      name: 'Running Tasks',
+      legendgroup: 'running',
       showlegend: false
     };
+
+    // Create scheduled tasks data with proper boundary connections
+    const createScheduledTasksData = () => {
+      const scheduledX: number[] = [];
+      const scheduledY: number[] = [];
+      const baseX: number[] = [];
+      const baseY: number[] = [];
+      
+      let inScheduledRegion = false;
+      
+      for (let i = 0; i < taskChartStore.taskDataX.length; i++) {
+        const time = taskChartStore.taskDataX[i];
+        const numTasks = taskChartStore.taskDataY[i];
+        const numCores = taskChartStore.executorDataY[i] || 0;
+        const scheduledTasks = Math.max(0, numTasks - numCores);
+        
+        if (scheduledTasks > 0) {
+          if (!inScheduledRegion) {
+            // Starting a new scheduled region - add boundary point
+            if (i > 0) {
+              scheduledX.push(taskChartStore.taskDataX[i-1]);
+              scheduledY.push(taskChartStore.executorDataY[i-1] || 0);
+              baseX.push(taskChartStore.taskDataX[i-1]);
+              baseY.push(taskChartStore.executorDataY[i-1] || 0);
+            }
+            inScheduledRegion = true;
+          }
+          
+          scheduledX.push(time);
+          scheduledY.push(numTasks);
+          baseX.push(time);
+          baseY.push(numCores);
+        } else if (inScheduledRegion) {
+          // Ending scheduled region - add boundary point
+          scheduledX.push(time);
+          scheduledY.push(numCores);
+          baseX.push(time);
+          baseY.push(numCores);
+          inScheduledRegion = false;
+        }
+      }
+      
+      return { scheduledX, scheduledY, baseX, baseY };
+    };
+
+    const { scheduledX, scheduledY, baseX, baseY } = createScheduledTasksData();
+
+    // Create a "base" trace for scheduled tasks to fill from (executor cores level)
+    const scheduledbasetrace: Plotly.Data = {
+      x: baseX,
+      y: baseY,
+      type: 'scatter',
+      mode: 'lines',
+      line: {
+        color: 'transparent',
+        width: 0
+      },
+      name: 'Scheduled Base',
+      showlegend: false,
+      hoverinfo: 'skip'
+    };
+
+    // Scheduled tasks trace (only when above executor cores) - Orange
+    const scheduledtaskstrace: Plotly.Data = {
+      x: scheduledX,
+      y: scheduledY,
+      type: 'scatter',
+      mode: 'lines',
+      line: {
+        color: '#FFB74D',
+        width: 2,
+        shape: 'hv'
+      },
+      fill: 'tonexty',
+      fillcolor: 'rgba(255, 183, 77, 0.5)',
+      name: 'Scheduled Tasks',
+      legendgroup: 'scheduled',
+      showlegend: false
+    };
+
     const executortrace: Plotly.Data = {
       x: taskChartStore.executorDataX,
       y: taskChartStore.executorDataY,
@@ -119,8 +203,9 @@ const TaskChart = observer(() => {
       legendgroup: 'executors',
       showlegend: false
     };
-    
-    const taskLegend: Plotly.Data = {
+
+    // Legend entries
+    const runningLegend: Plotly.Data = {
       x: [null],
       y: [null],
       type: 'scatter',
@@ -130,10 +215,26 @@ const TaskChart = observer(() => {
         size: 8,
         color: '#6DD58C'
       },
-      name: 'Active Tasks',
-      legendgroup: 'tasks',
+      name: 'Running Tasks',
+      legendgroup: 'running',
       showlegend: true
     };
+
+    const scheduledLegend: Plotly.Data = {
+      x: [null],
+      y: [null],
+      type: 'scatter',
+      mode: 'markers',
+      marker: {
+        symbol: 'circle',
+        size: 8,
+        color: '#FFB74D'
+      },
+      name: 'Scheduled Tasks',
+      legendgroup: 'scheduled',
+      showlegend: true
+    };
+
     const executorLegend: Plotly.Data = {
       x: [null],
       y: [null],
@@ -148,7 +249,7 @@ const TaskChart = observer(() => {
       legendgroup: 'executors',
       showlegend: true
     };
-    
+
     const jobtrace: Plotly.Data = {
       x: taskChartStore.jobDataX,
       y: taskChartStore.jobDataY,
@@ -162,7 +263,8 @@ const TaskChart = observer(() => {
         size: 1
       }
     };
-    return [tasktrace, executortrace, jobtrace, taskLegend, executorLegend];
+
+    return [runningtaskstrace, scheduledbasetrace, scheduledtaskstrace, executortrace, jobtrace, runningLegend, scheduledLegend, executorLegend];
   }, [
     taskChartStore.taskDataX,
     taskChartStore.taskDataY,
