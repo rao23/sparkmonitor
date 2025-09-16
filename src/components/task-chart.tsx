@@ -40,7 +40,7 @@ const getPlotDefaultLayout = (): Partial<Plotly.Layout> => {
     xaxis: {
       type: 'date',
       showticklabels: true,
-      tickformat: '%H:%M:%S.%L',
+      tickformat: '%H:%M:%S.%f',
       title: {
         text: ''
       },
@@ -53,6 +53,7 @@ const getPlotDefaultLayout = (): Partial<Plotly.Layout> => {
     },
     yaxis: {
       fixedrange: true,
+      dtick: 1, // Force y-axis to show only whole numbers
       tickfont: {
         color: darkMode ? '#E1E3E1' : '#000' // Axis text color
       },
