@@ -6,7 +6,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   let notebookCellCache = new Map<string, vscode.NotebookCell>();
 
-  // Register messaging for your renderer
+  // Register messaging for renderer
   const messaging = vscode.notebooks.createRendererMessaging('sparkmonitor-renderer');
 
   for (const notebook of vscode.workspace.notebookDocuments) {
@@ -23,6 +23,16 @@ export function activate(context: vscode.ExtensionContext) {
     });
     for (const cell of notebook.getCells()) {
       notebookCellCache.set(cell.document.uri.toString(), cell);
+    }
+  });
+
+  vscode.workspace.onDidCloseNotebookDocument((notebook) => {
+    messaging.postMessage({
+      type: 'deleteNotebookStore',
+      notebookId: notebook.uri.toString(),
+    });
+    for (const cell of notebook.getCells()) {
+      notebookCellCache.delete(cell.document.uri.toString());
     }
   });
 
