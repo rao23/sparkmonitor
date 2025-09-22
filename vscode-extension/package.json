@@ -24,6 +24,14 @@
                 ],
                 "entrypoint": "./dist/renderer.js",
                 "requiresMessaging": "always"
+            },
+            {
+                "id": "sparkmonitor-logfilter",
+                "displayName": "SparkMonitor Log Filter",
+                "entrypoint": "./dist/logRenderer.js",
+                "mimeTypes": [
+                    "application/vnd.code.notebook.stderr"
+                ]
             }
         ]
     },
