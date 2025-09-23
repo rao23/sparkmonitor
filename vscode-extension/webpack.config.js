@@ -1,9 +1,14 @@
 const path = require('path');
 
-module.exports = [
+module.exports = (env, argv) => {
+  const mode = argv.mode || 'development';
+  const isDev = mode === 'development';
+
+  const devtool = isDev ? 'source-map' : false;
+
   // Extension configuration
-  {
-    mode: 'development',
+  const extensionConfig = {
+    mode,
     entry: './src/extension.ts',
     target: 'node',
     output: {
@@ -28,11 +33,12 @@ module.exports = [
     externals: {
       'vscode': 'commonjs vscode'
     },
-    devtool: 'source-map'
-  },
+    devtool
+  };
+
   // Renderer configuration
-    {
-    mode: 'development',
+  const rendererConfig = {
+    mode,
     entry: './src/renderer.ts',
     target: 'web',
     output: {
@@ -59,11 +65,12 @@ module.exports = [
         }
       ]
     },
-    devtool: 'source-map'
-  },
+    devtool
+  };
+
   // LogRenderer configuration
-  {
-    mode: 'development',
+  const logRendererConfig = {
+    mode,
     entry: './src/logRenderer.ts',
     target: 'web',
     output: {
@@ -86,6 +93,8 @@ module.exports = [
         }
       ]
     },
-    devtool: 'source-map'
-  }
-];
+    devtool
+  };
+
+  return [extensionConfig, rendererConfig, logRendererConfig];
+};
